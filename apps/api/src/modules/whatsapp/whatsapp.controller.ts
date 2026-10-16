@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WhatsAppService } from './whatsapp.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BusinessContextGuard } from '../auth/guards/business-context.guard';
 
 @ApiTags('whatsapp')
 @Controller('whatsapp')
@@ -9,7 +10,7 @@ export class WhatsAppController {
   constructor(private whatsAppService: WhatsAppService) {}
 
   @Post('system/setup')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BusinessContextGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Configurar instancia WhatsApp' })
   async setup(@Request() req: any, @Body('instanceName') instanceName: string) {
@@ -17,7 +18,7 @@ export class WhatsAppController {
   }
 
   @Get('system/qrcode')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BusinessContextGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obter QR Code' })
   async getQrCode(@Query('instanceName') instanceName: string) {
@@ -25,7 +26,7 @@ export class WhatsAppController {
   }
 
   @Get('system/status')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BusinessContextGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Status da conexao' })
   async getStatus(@Query('instanceName') instanceName: string) {
@@ -33,7 +34,7 @@ export class WhatsAppController {
   }
 
   @Post('send/text')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BusinessContextGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Enviar texto' })
   async sendText(@Body() data: { instanceName: string; number: string; text: string }) {
@@ -41,7 +42,7 @@ export class WhatsAppController {
   }
 
   @Post('send/vaccine-card')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BusinessContextGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Enviar carteira de vacinas' })
   async sendVaccineCard(@Request() req: any, @Body() data: { tutorPhone: string; petId: string }) {
@@ -55,7 +56,7 @@ export class WhatsAppController {
   }
 
   @Get('templates')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BusinessContextGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Listar templates' })
   async getTemplates(@Request() req: any) {
@@ -63,7 +64,7 @@ export class WhatsAppController {
   }
 
   @Post('templates')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, BusinessContextGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar template' })
   async createTemplate(@Request() req: any, @Body() data: any) {

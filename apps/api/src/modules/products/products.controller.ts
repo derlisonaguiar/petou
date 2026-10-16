@@ -2,10 +2,11 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Requ
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BusinessContextGuard } from '../auth/guards/business-context.guard';
 
 @ApiTags('products')
 @Controller('products')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, BusinessContextGuard)
 @ApiBearerAuth()
 export class ProductsController {
   constructor(private productsService: ProductsService) {}
@@ -54,7 +55,7 @@ export class ProductsController {
 
   @Post('stock/movements')
   @ApiOperation({ summary: 'Registrar movimento de estoque' })
-  async addStockMovement(@Body() data: any) {
-    return this.productsService.addStockMovement(data.productId, data);
+  async addStockMovement(@Body() data: any, @Request() req: any) {
+    return this.productsService.addStockMovement(data.productId, req.user.businessId, data);
   }
 }

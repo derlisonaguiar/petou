@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RegisterTutorDto } from './dto/register-tutor.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -41,6 +42,7 @@ export class AuthService {
       email: user.email,
       businessId: user.businessId,
       role: user.role,
+      accountType: user.accountType,
     };
 
     return {
@@ -55,12 +57,17 @@ export class AuthService {
         email: user.email,
         role: user.role,
         businessId: user.businessId,
+        accountType: user.accountType,
       },
     };
   }
 
   async register(registerDto: RegisterDto) {
     return this.usersService.createWithBusiness(registerDto);
+  }
+
+  async registerTutor(registerTutorDto: RegisterTutorDto) {
+    return this.usersService.createTutorAccount(registerTutorDto);
   }
 
   async refreshToken(token: string) {
@@ -79,6 +86,7 @@ export class AuthService {
         email: user.email,
         businessId: user.businessId,
         role: user.role,
+        accountType: user.accountType,
       };
 
       return {
@@ -166,6 +174,7 @@ export class AuthService {
       email: user.email,
       businessId: user.businessId,
       role: user.role,
+      accountType: user.accountType,
     };
 
     return {
@@ -180,6 +189,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         businessId: user.businessId,
+        accountType: user.accountType,
         businessName: user.business?.name,
       },
     };

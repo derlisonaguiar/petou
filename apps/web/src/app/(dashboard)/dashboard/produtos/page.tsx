@@ -68,8 +68,10 @@ export default function ProdutosPage() {
         ...data,
         costPrice: parseFloat(data.costPrice) || 0,
         salePrice: parseFloat(data.salePrice) || 0,
-        stock: parseInt(data.stock) || 0,
+        currentStock: parseInt(data.stock) || 0,
         minStock: parseInt(data.minStock) || 0,
+        forSpecies: [],
+        images: [],
       });
       return response.data;
     },
@@ -138,7 +140,7 @@ export default function ProdutosPage() {
                   {lowStock.slice(0, 6).map((p: any) => (
                     <div key={p.id} className="flex items-center justify-between text-sm p-2 bg-white/50 rounded-lg">
                       <span className="text-gray-700 truncate mr-2">{p.name}</span>
-                      <span className="text-orange-600 font-medium whitespace-nowrap">{p.stock} {p.unit}</span>
+                      <span className="text-orange-600 font-medium whitespace-nowrap">{p.currentStock} {p.unit}</span>
                     </div>
                   ))}
                 </div>
@@ -313,7 +315,7 @@ export default function ProdutosPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {products?.map((product: any) => {
-            const isLowStock = product.stock <= (product.minStock || 5);
+            const isLowStock = Number(product.currentStock) <= Number(product.minStock || 5);
 
             return (
               <Card key={product.id} className="group border-0 shadow-card hover:shadow-card-hover transition-all overflow-hidden">
@@ -348,7 +350,7 @@ export default function ProdutosPage() {
                           <div className="flex items-center gap-2">
                             <Boxes className={`h-4 w-4 ${isLowStock ? 'text-orange-500' : 'text-gray-400'}`} />
                             <span className={`font-medium ${isLowStock ? 'text-orange-600' : 'text-gray-700'}`}>
-                              {product.stock} {product.unit}
+                              {product.currentStock} {product.unit}
                             </span>
                           </div>
                         </div>

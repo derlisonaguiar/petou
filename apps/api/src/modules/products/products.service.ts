@@ -36,12 +36,44 @@ export class ProductsService {
   }
 
   async create(businessId: string, data: any) {
-    return this.prisma.product.create({ data: { ...data, businessId } });
+    const initialStock = Number(data.currentStock ?? data.stock ?? 0);
+    const { stock, currentStock, ...productData } = data;
+
+    return this.prisma.$transaction(async (prisma) => {
+      const product = await prisma.product.create({
+        data: {
+          ...productData,
+          businessId,
+          category: productData.category || 'OUTROS',
+          forSpecies: productData.forSpecies || [],
+          images: productData.images || [],
+          currentStock: initialStock,
+        },
+      });
+
+      if (initialStock > 0) {
+        await prisma.stockMovement.create({
+          data: {
+            productId: product.id,
+            type: 'PURCHASE',
+            quantity: initialStock,
+            previousStock: 0,
+            newStock: initialStock,
+            unitCost: product.costPrice,
+            totalCost: Number(product.costPrice) * initialStock,
+            notes: 'Estoque inicial do cadastro do produto',
+          },
+        });
+      }
+
+      return product;
+    });
   }
 
   async update(id: string, businessId: string, data: any) {
     await this.findOne(id, businessId);
-    return this.prisma.product.update({ where: { id }, data });
+    const { businessId: _businessId, ...safeData } = data;
+    return this.prisma.product.update({ where: { id }, data: safeData });
   }
 
   async delete(id: string, businessId: string) {
@@ -63,9 +95,8 @@ export class ProductsService {
     });
   }
 
-  async addStockMovement(productId: string, data: any) {
-    const product = await this.prisma.product.findUnique({ where: { id: productId } });
-    if (!product) throw new NotFoundException('Produto nao encontrado');
+  async addStockMovement(productId: string, businessId: string, data: any) {
+    const product = await this.findOne(productId, businessId);
 
     const previousStock = Number(product.currentStock);
     let newStock = previousStock;

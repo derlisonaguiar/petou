@@ -2,10 +2,11 @@ import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } fr
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { VaccinesService } from './vaccines.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BusinessContextGuard } from '../auth/guards/business-context.guard';
 
 @ApiTags('vaccines')
 @Controller('vaccines')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, BusinessContextGuard)
 @ApiBearerAuth()
 export class VaccinesController {
   constructor(private vaccinesService: VaccinesService) {}

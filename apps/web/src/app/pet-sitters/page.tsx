@@ -1,33 +1,43 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
-import { Search, Star, MapPin, Dog, Cat, Car, Home, Filter, Check } from 'lucide-react';
-import Link from 'next/link';
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/utils";
+import {
+  Search,
+  Star,
+  MapPin,
+  Dog,
+  Cat,
+  Car,
+  Home,
+  Filter,
+  Check,
+} from "lucide-react";
+import Link from "next/link";
 
 const serviceTypes = [
-  { value: 'WALK', label: 'Passeio' },
-  { value: 'DAYCARE', label: 'Creche' },
-  { value: 'BOARDING', label: 'Hospedagem' },
-  { value: 'VISIT', label: 'Visita' },
-  { value: 'GROOMING', label: 'Banho' },
+  { value: "WALK", label: "Passeio" },
+  { value: "DAYCARE", label: "Creche" },
+  { value: "BOARDING", label: "Hospedagem" },
+  { value: "VISIT", label: "Visita" },
+  { value: "GROOMING", label: "Banho" },
 ];
 
 export default function PetSittersPage() {
-  const [search, setSearch] = useState('');
-  const [city, setCity] = useState('');
-  const [serviceType, setServiceType] = useState('');
-  const [species, setSpecies] = useState('');
+  const [search, setSearch] = useState("");
+  const [city, setCity] = useState("");
+  const [serviceType, setServiceType] = useState("");
+  const [species, setSpecies] = useState("");
 
   const { data: petSitters, isLoading } = useQuery({
-    queryKey: ['pet-sitters', search, city, serviceType, species],
+    queryKey: ["pet-sitters", search, city, serviceType, species],
     queryFn: async () => {
-      const response = await api.get('/pet-sitters', {
+      const response = await api.get("/pet-sitters", {
         params: { search, city, serviceType, species },
       });
       return response.data;
@@ -41,16 +51,25 @@ export default function PetSittersPage() {
         <div className="container mx-auto py-4 px-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-2xl font-bold text-primary">
-              Pet360 Cuidadores
+              Petou Cuidadores
             </Link>
             <nav className="hidden md:flex items-center gap-6">
-              <Link href="/marketplace" className="text-gray-700 hover:text-primary">
+              <Link
+                href="/marketplace"
+                className="text-gray-700 hover:text-primary"
+              >
                 Produtos
               </Link>
-              <Link href="/pet-sitters" className="text-gray-700 hover:text-primary">
+              <Link
+                href="/pet-sitters"
+                className="text-gray-700 hover:text-primary"
+              >
                 Cuidadores
               </Link>
-              <Link href="/pet-sitters/cadastro" className="text-gray-700 hover:text-primary">
+              <Link
+                href="/pet-sitters/cadastro"
+                className="text-gray-700 hover:text-primary"
+              >
                 Seja um Cuidador
               </Link>
               <Link href="/login" className="text-gray-700 hover:text-primary">
@@ -68,7 +87,8 @@ export default function PetSittersPage() {
             Encontre Cuidadores de Confianca
           </h1>
           <p className="text-lg opacity-90 mb-8">
-            Passeios, hospedagem, creche e mais. Profissionais verificados perto de voce.
+            Passeios, hospedagem, creche e mais. Profissionais verificados perto
+            de voce.
           </p>
         </div>
       </section>
@@ -94,7 +114,9 @@ export default function PetSittersPage() {
               >
                 <option value="">Tipo de servico</option>
                 {serviceTypes.map((type) => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
                 ))}
               </select>
               <select
@@ -119,16 +141,16 @@ export default function PetSittersPage() {
         {/* Service Type Tabs */}
         <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
           <Button
-            variant={!serviceType ? 'default' : 'outline'}
+            variant={!serviceType ? "default" : "outline"}
             size="sm"
-            onClick={() => setServiceType('')}
+            onClick={() => setServiceType("")}
           >
             Todos
           </Button>
           {serviceTypes.map((type) => (
             <Button
               key={type.value}
-              variant={serviceType === type.value ? 'default' : 'outline'}
+              variant={serviceType === type.value ? "default" : "outline"}
               size="sm"
               onClick={() => setServiceType(type.value)}
             >
@@ -144,7 +166,9 @@ export default function PetSittersPage() {
           </div>
         ) : petSitters?.petSitters?.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">Nenhum cuidador encontrado na sua regiao</p>
+            <p className="text-gray-500">
+              Nenhum cuidador encontrado na sua regiao
+            </p>
             <p className="text-sm text-gray-400 mt-2">
               Tente alterar os filtros ou expandir a area de busca
             </p>
@@ -152,7 +176,10 @@ export default function PetSittersPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {petSitters?.petSitters?.map((sitter: any) => (
-              <Card key={sitter.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <Card
+                key={sitter.id}
+                className="overflow-hidden hover:shadow-lg transition-shadow"
+              >
                 <CardContent className="p-0">
                   <div className="relative h-48 bg-gray-100">
                     {sitter.photoUrl ? (
@@ -206,12 +233,12 @@ export default function PetSittersPage() {
 
                     {/* Accepted Pets */}
                     <div className="flex items-center gap-2 mb-3">
-                      {sitter.acceptedSpecies?.includes('DOG') && (
+                      {sitter.acceptedSpecies?.includes("DOG") && (
                         <span className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
                           <Dog className="h-3 w-3" /> Cachorros
                         </span>
                       )}
-                      {sitter.acceptedSpecies?.includes('CAT') && (
+                      {sitter.acceptedSpecies?.includes("CAT") && (
                         <span className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded">
                           <Cat className="h-3 w-3" /> Gatos
                         </span>
@@ -235,14 +262,17 @@ export default function PetSittersPage() {
                     {/* Services */}
                     {sitter.services?.length > 0 && (
                       <div className="border-t pt-3 mt-3">
-                        <p className="text-xs text-gray-500 mb-2">Servicos a partir de:</p>
+                        <p className="text-xs text-gray-500 mb-2">
+                          Servicos a partir de:
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           {sitter.services.slice(0, 3).map((service: any) => (
                             <span
                               key={service.id}
                               className="text-xs bg-primary/10 text-primary px-2 py-1 rounded"
                             >
-                              {service.name}: {formatCurrency(Number(service.price))}
+                              {service.name}:{" "}
+                              {formatCurrency(Number(service.price))}
                             </span>
                           ))}
                         </div>
@@ -263,7 +293,11 @@ export default function PetSittersPage() {
         {petSitters?.totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-8">
             {Array.from({ length: petSitters.totalPages }, (_, i) => (
-              <Button key={i} variant={petSitters.page === i + 1 ? 'default' : 'outline'} size="sm">
+              <Button
+                key={i}
+                variant={petSitters.page === i + 1 ? "default" : "outline"}
+                size="sm"
+              >
                 {i + 1}
               </Button>
             ))}

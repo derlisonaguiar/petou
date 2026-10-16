@@ -15,10 +15,11 @@ import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BusinessContextGuard } from '../auth/guards/business-context.guard';
 
 @ApiTags('pets')
 @Controller('pets')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, BusinessContextGuard)
 @ApiBearerAuth()
 export class PetsController {
   constructor(private petsService: PetsService) {}

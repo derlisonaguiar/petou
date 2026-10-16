@@ -1,3 +1,15 @@
+const colors = require('tailwindcss/colors');
+
+const petouNavy = {
+  50: '#EEF1FF', 100: '#DCE4FF', 200: '#B9C8FF', 300: '#8FA6EA', 400: '#667EC2',
+  500: '#2D3F7D', 600: '#24346A', 700: '#1C2A61', 800: '#172252', 900: '#121A48', 950: '#0A102D',
+};
+
+const petouGold = {
+  50: '#FFF9E8', 100: '#FFF1CF', 200: '#FFE0A1', 300: '#FBCB70', 400: '#F8BC47',
+  500: '#F5AE2B', 600: '#E89A1B', 700: '#B96F0D', 800: '#8C520A', 900: '#60390A', 950: '#382000',
+};
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ['class'],
@@ -17,6 +29,21 @@ module.exports = {
     'bg-emerald-500', 'bg-indigo-500',
   ],
   theme: {
+    colors: {
+      ...colors,
+      blue: petouNavy,
+      indigo: petouNavy,
+      purple: petouNavy,
+      violet: petouNavy,
+      teal: petouNavy,
+      cyan: petouNavy,
+      green: petouGold,
+      emerald: petouGold,
+      pink: petouGold,
+      rose: petouGold,
+      orange: petouGold,
+      amber: petouGold,
+    },
     container: {
       center: true,
       padding: '2rem',

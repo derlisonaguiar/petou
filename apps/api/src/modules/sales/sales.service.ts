@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateSaleDto } from './dto/create-sale.dto';
 
 @Injectable()
 export class SalesService {
@@ -35,67 +36,90 @@ export class SalesService {
     return sale;
   }
 
-  async create(businessId: string, userId: string, data: any) {
-    const { items, ...saleData } = data;
+  async create(businessId: string, userId: string, data: CreateSaleDto) {
+    const quantitiesByProduct = new Map<string, number>();
+    for (const item of data.items) {
+      quantitiesByProduct.set(item.productId, (quantitiesByProduct.get(item.productId) || 0) + item.quantity);
+    }
 
-    const subtotal = items.reduce((acc: number, item: any) => acc + Number(item.totalPrice), 0);
-    const totalAmount = subtotal - (data.discount || 0);
+    return this.prisma.$transaction(async (prisma) => {
+      if (data.tutorId) {
+        const tutor = await prisma.tutor.findFirst({ where: { id: data.tutorId, businessId } });
+        if (!tutor) throw new NotFoundException('Cliente nao encontrado');
+      }
 
-    const sale = await this.prisma.sale.create({
-      data: {
-        ...saleData,
-        businessId,
-        userId,
-        subtotal,
-        totalAmount,
-        items: {
-          create: items.map((item: any) => ({
-            productId: item.productId,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            discount: item.discount || 0,
-            totalPrice: item.totalPrice,
-            itemType: item.itemType || 'PRODUCT',
-          })),
-        },
-      },
-      include: { items: true },
-    });
+      const productIds = [...quantitiesByProduct.keys()];
+      const products = await prisma.product.findMany({
+        where: { id: { in: productIds }, businessId, isActive: true },
+      });
+      if (products.length !== productIds.length) {
+        throw new NotFoundException('Um ou mais produtos nao foram encontrados');
+      }
 
-    // Update stock for product items
-    for (const item of items) {
-      if (item.productId && item.itemType !== 'SERVICE') {
-        const product = await this.prisma.product.findUnique({ where: { id: item.productId } });
-        if (product) {
-          await this.prisma.$transaction([
-            this.prisma.stockMovement.create({
-              data: {
-                productId: item.productId,
-                type: 'SALE',
-                quantity: item.quantity,
-                previousStock: product.currentStock,
-                newStock: Number(product.currentStock) - Number(item.quantity),
-                saleId: sale.id,
-              },
-            }),
-            this.prisma.product.update({
-              where: { id: item.productId },
-              data: { currentStock: { decrement: Number(item.quantity) } },
-            }),
-          ]);
+      const productsById = new Map(products.map((product) => [product.id, product]));
+      for (const [productId, quantity] of quantitiesByProduct) {
+        const product = productsById.get(productId)!;
+        if (Number(product.currentStock) < quantity) {
+          throw new BadRequestException(`Estoque insuficiente para ${product.name}`);
         }
       }
-    }
 
-    // Update tutor total spent
-    if (data.tutorId) {
-      await this.prisma.tutor.update({
-        where: { id: data.tutorId },
-        data: { totalSpent: { increment: totalAmount }, lastVisitAt: new Date() },
+      const saleItems = data.items.map((item) => {
+        const product = productsById.get(item.productId)!;
+        const unitPrice = Number(product.salePrice);
+        return {
+          productId: product.id,
+          description: product.name,
+          quantity: item.quantity,
+          unitPrice,
+          totalPrice: unitPrice * item.quantity,
+          itemType: 'PRODUCT',
+        };
       });
-    }
+      const subtotal = saleItems.reduce((total, item) => total + item.totalPrice, 0);
 
-    return sale;
+      const sale = await prisma.sale.create({
+        data: {
+          businessId,
+          userId,
+          tutorId: data.tutorId,
+          paymentMethod: data.paymentMethod,
+          subtotal,
+          totalAmount: subtotal,
+          items: { create: saleItems },
+        },
+        include: { items: true, tutor: true },
+      });
+
+      for (const [productId, quantity] of quantitiesByProduct) {
+        const product = productsById.get(productId)!;
+        const updated = await prisma.product.updateMany({
+          where: { id: productId, businessId, currentStock: { gte: quantity } },
+          data: { currentStock: { decrement: quantity } },
+        });
+        if (updated.count !== 1) {
+          throw new BadRequestException(`Estoque insuficiente para ${product.name}`);
+        }
+        await prisma.stockMovement.create({
+          data: {
+            productId,
+            type: 'SALE',
+            quantity,
+            previousStock: Number(product.currentStock),
+            newStock: Number(product.currentStock) - quantity,
+            saleId: sale.id,
+          },
+        });
+      }
+
+      if (data.tutorId) {
+        await prisma.tutor.update({
+          where: { id: data.tutorId },
+          data: { totalSpent: { increment: subtotal }, lastVisitAt: new Date() },
+        });
+      }
+
+      return sale;
+    });
   }
 }

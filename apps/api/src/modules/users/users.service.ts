@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
+import { RegisterTutorDto } from '../auth/dto/register-tutor.dto';
 
 @Injectable()
 export class UsersService {
@@ -27,6 +28,15 @@ export class UsersService {
       where: { businessId },
       orderBy: { name: 'asc' },
     });
+  }
+
+  async findOneInBusiness(id: string, businessId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, businessId },
+      include: { business: true },
+    });
+    if (!user) throw new NotFoundException('Usuario nao encontrado');
+    return user;
   }
 
   async createWithBusiness(dto: RegisterDto) {
@@ -75,6 +85,7 @@ export class UsersService {
           name: dto.userName,
           email: dto.userEmail,
           phone: dto.userPhone,
+          accountType: 'BUSINESS',
           role: 'OWNER',
           passwordHash,
         },
@@ -87,6 +98,46 @@ export class UsersService {
     return {
       business: result.business,
       user: userWithoutPassword,
+    };
+  }
+
+  async createTutorAccount(dto: RegisterTutorDto) {
+    const existingUser = await this.findByEmail(dto.email);
+    if (existingUser) {
+      throw new ConflictException('Email ja cadastrado');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    const result = await this.prisma.$transaction(async (prisma) => {
+      const user = await prisma.user.create({
+        data: {
+          name: dto.name,
+          email: dto.email,
+          phone: dto.phone,
+          passwordHash,
+          accountType: 'TUTOR',
+          businessId: null,
+        },
+      });
+
+      const tutor = await prisma.tutor.create({
+        data: {
+          userId: user.id,
+          businessId: null,
+          name: dto.name,
+          email: dto.email,
+          phone: dto.phone,
+        },
+      });
+
+      return { user, tutor };
+    });
+
+    const { passwordHash: _, ...userWithoutPassword } = result.user;
+    return {
+      user: userWithoutPassword,
+      tutor: result.tutor,
     };
   }
 
@@ -107,6 +158,12 @@ export class UsersService {
     });
   }
 
+  async updateInBusiness(id: string, businessId: string, data: any) {
+    await this.findOneInBusiness(id, businessId);
+    const { businessId: _businessId, accountType: _accountType, ...safeData } = data;
+    return this.update(id, safeData);
+  }
+
   async delete(id: string) {
     const user = await this.findOne(id);
     if (!user) {
@@ -114,5 +171,10 @@ export class UsersService {
     }
 
     return this.prisma.user.delete({ where: { id } });
+  }
+
+  async deleteInBusiness(id: string, businessId: string) {
+    await this.findOneInBusiness(id, businessId);
+    return this.delete(id);
   }
 }

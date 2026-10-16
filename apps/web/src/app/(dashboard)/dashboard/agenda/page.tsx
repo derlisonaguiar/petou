@@ -82,6 +82,17 @@ export default function AgendaPage() {
 
   const tutors = tutorsResponse?.data || [];
 
+  const { data: petsResponse } = useQuery({
+    queryKey: ['pets-select', formData.tutorId],
+    queryFn: async () => {
+      const response = await api.get('/pets', { params: { tutorId: formData.tutorId } });
+      return response.data;
+    },
+    enabled: Boolean(formData.tutorId),
+  });
+
+  const pets = petsResponse?.data || [];
+
   const { data: servicesResponse } = useQuery({
     queryKey: ['services-select'],
     queryFn: async () => {
@@ -157,6 +168,7 @@ export default function AgendaPage() {
     e.preventDefault();
     createMutation.mutate({
       ...formData,
+      appointmentType: 'CONSULTATION',
       scheduledDate: new Date(formData.scheduledDate).toISOString(),
     });
   };
@@ -248,13 +260,28 @@ export default function AgendaPage() {
                 <label className="text-sm font-medium text-gray-700">Tutor *</label>
                 <select
                   value={formData.tutorId}
-                  onChange={(e) => setFormData({ ...formData, tutorId: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, tutorId: e.target.value, petId: '' })}
                   className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="">Selecione um tutor</option>
                   {tutors?.map((tutor: any) => (
                     <option key={tutor.id} value={tutor.id}>{tutor.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Pet *</label>
+                <select
+                  value={formData.petId}
+                  onChange={(e) => setFormData({ ...formData, petId: e.target.value })}
+                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  disabled={!formData.tutorId}
+                >
+                  <option value="">{formData.tutorId ? 'Selecione um pet' : 'Selecione primeiro um tutor'}</option>
+                  {pets.map((pet: any) => (
+                    <option key={pet.id} value={pet.id}>{pet.name}</option>
                   ))}
                 </select>
               </div>

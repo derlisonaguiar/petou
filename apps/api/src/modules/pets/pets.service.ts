@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
+import { CreateTutorPetDto } from './dto/create-tutor-pet.dto';
 
 @Injectable()
 export class PetsService {
@@ -88,6 +89,11 @@ export class PetsService {
   }
 
   async create(businessId: string, dto: CreatePetDto) {
+    if (dto.tutorId) {
+      const tutor = await this.prisma.tutor.findFirst({ where: { id: dto.tutorId, businessId } });
+      if (!tutor) throw new NotFoundException('Tutor nao encontrado');
+    }
+
     return this.prisma.pet.create({
       data: {
         ...dto,
@@ -97,8 +103,31 @@ export class PetsService {
     });
   }
 
+  async findAllForTutor(userId: string) {
+    const tutor = await this.prisma.tutor.findUnique({ where: { userId } });
+    if (!tutor) throw new NotFoundException('Tutor nao encontrado');
+
+    return this.prisma.pet.findMany({
+      where: { tutorId: tutor.id, businessId: null, isActive: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async createForTutor(userId: string, dto: CreateTutorPetDto) {
+    const tutor = await this.prisma.tutor.findUnique({ where: { userId } });
+    if (!tutor) throw new NotFoundException('Tutor nao encontrado');
+
+    return this.prisma.pet.create({
+      data: { ...dto, tutorId: tutor.id, businessId: null },
+    });
+  }
+
   async update(id: string, businessId: string, dto: UpdatePetDto) {
     await this.findOne(id, businessId);
+    if (dto.tutorId) {
+      const tutor = await this.prisma.tutor.findFirst({ where: { id: dto.tutorId, businessId } });
+      if (!tutor) throw new NotFoundException('Tutor nao encontrado');
+    }
     return this.prisma.pet.update({
       where: { id },
       data: dto,

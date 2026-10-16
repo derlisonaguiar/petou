@@ -34,7 +34,7 @@ const paymentMethodConfig: Record<string, { label: string; icon: any; color: str
 export default function VendasPage() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [items, setItems] = useState<{ productId: string; quantity: number; price: number }[]>([]);
+  const [items, setItems] = useState<{ productId: string; quantity: number }[]>([]);
   const [selectedProduct, setSelectedProduct] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [tutorId, setTutorId] = useState('');
@@ -100,11 +100,20 @@ export default function VendasPage() {
   const addItem = () => {
     const product = products.find((p: any) => p.id === selectedProduct);
     if (product) {
-      setItems([...items, {
-        productId: product.id,
-        quantity: parseInt(quantity) || 1,
-        price: Number(product.salePrice),
-      }]);
+      const itemQuantity = Number(quantity);
+      if (!Number.isFinite(itemQuantity) || itemQuantity <= 0) {
+        toast({ title: 'Informe uma quantidade válida', variant: 'destructive' });
+        return;
+      }
+      setItems((currentItems) => {
+        const existingItem = currentItems.find((item) => item.productId === product.id);
+        if (existingItem) {
+          return currentItems.map((item) =>
+            item.productId === product.id ? { ...item, quantity: item.quantity + itemQuantity } : item,
+          );
+        }
+        return [...currentItems, { productId: product.id, quantity: itemQuantity }];
+      });
       setSelectedProduct('');
       setQuantity('1');
     }
@@ -114,7 +123,10 @@ export default function VendasPage() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const total = items.reduce((sum, item) => {
+    const product = products.find((p: any) => p.id === item.productId);
+    return sum + (Number(product?.salePrice || 0) * item.quantity);
+  }, 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,7 +277,7 @@ export default function VendasPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className="font-semibold text-gray-900">{formatCurrency(item.price * item.quantity)}</span>
+                            <span className="font-semibold text-gray-900">{formatCurrency(Number(product?.salePrice || 0) * item.quantity)}</span>
                             <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(index)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -341,7 +353,7 @@ export default function VendasPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900">#{sale.saleNumber}</h3>
+                          <h3 className="font-semibold text-gray-900">#{sale.invoiceNumber || sale.id.slice(-6).toUpperCase()}</h3>
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${payment.color}`}>
                             <PaymentIcon className="h-3 w-3" />
                             {payment.label}

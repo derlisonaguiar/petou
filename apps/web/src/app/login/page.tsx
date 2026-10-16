@@ -74,10 +74,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#fff8e8] to-[#fffdf8] py-12 px-4">
+      <Card className="w-full max-w-md border-primary/10 shadow-[0_16px_40px_-24px_rgba(18,26,72,0.45)]">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Entrar no Pet360</CardTitle>
+          <CardTitle className="text-2xl text-primary">Entrar no Petou</CardTitle>
           <CardDescription>Acesse sua conta para gerenciar seu negocio</CardDescription>
         </CardHeader>
         <CardContent>

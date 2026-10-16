@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,249 +10,132 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 
 const businessTypeOptions = [
-  { value: 'PET_SHOP', label: 'Pet Shop' },
-  { value: 'VET_CLINIC', label: 'Clinica Veterinaria' },
-  { value: 'GROOMING', label: 'Banho e Tosa' },
-  { value: 'HOTEL', label: 'Hotel Pet' },
-  { value: 'DAYCARE', label: 'Daycare / Creche' },
-  { value: 'ADOPTION_CENTER', label: 'Centro de Adocao' },
+  { value: 'PET_SHOP', label: 'Pet Shop' }, { value: 'VET_CLINIC', label: 'Clinica Veterinaria' },
+  { value: 'GROOMING', label: 'Banho e Tosa' }, { value: 'HOTEL', label: 'Hotel Pet' },
+  { value: 'DAYCARE', label: 'Daycare / Creche' }, { value: 'ADOPTION_CENTER', label: 'Centro de Adocao' },
 ];
 
-export default function RegisterPage() {
-  const [step, setStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    businessName: '',
-    cnpj: '',
-    businessPhone: '',
-    businessEmail: '',
-    businessTypes: [] as string[],
-    userName: '',
-    userEmail: '',
-    userPhone: '',
-    password: '',
-    confirmPassword: '',
-  });
+type RegistrationType = 'choice' | 'business' | 'tutor';
 
+export default function RegisterPage() {
+  const [registrationType, setRegistrationType] = useState<RegistrationType>('choice');
+  const [businessStep, setBusinessStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [business, setBusiness] = useState({ businessName: '', cnpj: '', businessPhone: '', businessEmail: '', businessTypes: [] as string[], userName: '', userEmail: '', userPhone: '', password: '', confirmPassword: '' });
+  const [tutor, setTutor] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleBusinessTypeToggle = (type: string) => {
-    setFormData(prev => ({
-      ...prev,
-      businessTypes: prev.businessTypes.includes(type)
-        ? prev.businessTypes.filter(t => t !== type)
-        : [...prev.businessTypes, type]
-    }));
-  };
+  const returnToChoice = () => { setRegistrationType('choice'); setBusinessStep(1); };
+  const toggleBusinessType = (type: string) => setBusiness((current) => ({
+    ...current,
+    businessTypes: current.businessTypes.includes(type) ? current.businessTypes.filter((item) => item !== type) : [...current.businessTypes, type],
+  }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (formData.password !== formData.confirmPassword) {
+  const handleBusinessSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (business.password !== business.confirmPassword) {
       toast({ title: 'As senhas nao conferem', variant: 'destructive' });
       return;
     }
-
-    if (formData.businessTypes.length === 0) {
-      toast({ title: 'Selecione pelo menos um tipo de negocio', variant: 'destructive' });
-      return;
-    }
-
     setIsLoading(true);
-
     try {
       await api.post('/auth/register', {
-        businessName: formData.businessName,
-        cnpj: formData.cnpj || undefined,
-        businessPhone: formData.businessPhone,
-        businessEmail: formData.businessEmail || undefined,
-        businessTypes: formData.businessTypes,
-        userName: formData.userName,
-        userEmail: formData.userEmail,
-        userPhone: formData.userPhone,
-        password: formData.password,
+        businessName: business.businessName, cnpj: business.cnpj || undefined, businessPhone: business.businessPhone,
+        businessEmail: business.businessEmail || undefined, businessTypes: business.businessTypes, userName: business.userName,
+        userEmail: business.userEmail, userPhone: business.userPhone, password: business.password,
       });
-
       toast({ title: 'Conta criada com sucesso!' });
       router.push('/login?registered=true');
     } catch (error: any) {
-      toast({
-        title: 'Erro ao criar conta',
-        description: error.response?.data?.message || 'Tente novamente',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+      toast({ title: 'Erro ao criar conta', description: error.response?.data?.message || 'Tente novamente', variant: 'destructive' });
+    } finally { setIsLoading(false); }
   };
 
+  const handleTutorSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (tutor.password !== tutor.confirmPassword) {
+      toast({ title: 'As senhas nao conferem', variant: 'destructive' });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await api.post('/auth/register/tutor', { name: tutor.name, email: tutor.email, phone: tutor.phone, password: tutor.password });
+      toast({ title: 'Conta criada com sucesso!' });
+      router.push('/login?registered=true');
+    } catch (error: any) {
+      toast({ title: 'Erro ao criar conta', description: error.response?.data?.message || 'Tente novamente', variant: 'destructive' });
+    } finally { setIsLoading(false); }
+  };
+
+  const textInput = (label: string, value: string, setValue: (value: string) => void, options: { type?: string; placeholder?: string } = {}) => (
+    <div>
+      <label className="mb-1 block text-sm font-medium text-[#121A48]">{label} *</label>
+      <Input type={options.type} value={value} onChange={(event) => setValue(event.target.value)} placeholder={options.placeholder} required />
+    </div>
+  );
+
+  const passwordFields = (data: { password: string; confirmPassword: string }, update: (data: { password: string; confirmPassword: string }) => void) => (
+    <>
+      {textInput('Senha', data.password, (password) => update({ ...data, password }), { type: 'password', placeholder: 'Minimo 6 caracteres' })}
+      {textInput('Confirmar senha', data.confirmPassword, (confirmPassword) => update({ ...data, confirmPassword }), { type: 'password', placeholder: 'Repita a senha' })}
+    </>
+  );
+
+  const description = registrationType === 'choice' ? 'Escolha como voce quer usar o Petou' : registrationType === 'tutor' ? 'Encontre servicos e cuide da rotina do seu pet' : businessStep === 1 ? 'Dados do seu negocio' : 'Seus dados de acesso';
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
-      <Card className="w-full max-w-lg">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#FFFAF3] via-[#fffdf8] to-[#eef1fb] p-4">
+      <Card className="w-full max-w-lg border-[#121A48]/10 shadow-[0_16px_40px_-24px_rgba(18,26,72,0.45)]">
         <CardHeader className="text-center">
-          <Link href="/" className="text-2xl font-bold text-primary mb-2 block">Pet360</Link>
-          <CardTitle>Criar Conta</CardTitle>
-          <CardDescription>
-            {step === 1 ? 'Dados do seu negocio' : 'Seus dados de acesso'}
-          </CardDescription>
+          <Link href="/" className="mb-2 block text-2xl font-bold text-[#121A48]">Petou</Link>
+          <CardTitle className="text-[#121A48]">{registrationType === 'tutor' ? 'Criar conta de tutor' : 'Criar conta'}</CardTitle>
+          <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {step === 1 ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Nome do Negocio *</label>
-                  <Input
-                    value={formData.businessName}
-                    onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                    placeholder="Ex: Pet Shop Feliz"
-                    required
-                  />
-                </div>
+          {registrationType === 'choice' && (
+            <div className="space-y-3">
+              <button type="button" onClick={() => setRegistrationType('tutor')} className="w-full rounded-xl border border-[#2D3F7D]/20 bg-white p-5 text-left transition hover:border-[#F5AE2B] hover:bg-[#FFFAF3] focus:outline-none focus:ring-2 focus:ring-[#F5AE2B]">
+                <span className="block text-base font-semibold text-[#121A48]">Sou tutor</span>
+                <span className="mt-1 block text-sm text-slate-600">Quero encontrar servicos para o meu pet.</span>
+              </button>
+              <button type="button" onClick={() => setRegistrationType('business')} className="w-full rounded-xl border border-[#2D3F7D]/20 bg-white p-5 text-left transition hover:border-[#F5AE2B] hover:bg-[#FFFAF3] focus:outline-none focus:ring-2 focus:ring-[#F5AE2B]">
+                <span className="block text-base font-semibold text-[#121A48]">Tenho um negocio pet</span>
+                <span className="mt-1 block text-sm text-slate-600">Quero organizar meu negocio e ser encontrado por clientes.</span>
+              </button>
+            </div>
+          )}
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">CNPJ (opcional)</label>
-                  <Input
-                    value={formData.cnpj}
-                    onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
-                    placeholder="00.000.000/0000-00"
-                  />
-                </div>
+          {registrationType === 'tutor' && (
+            <form onSubmit={handleTutorSubmit} className="space-y-4">
+              {textInput('Nome', tutor.name, (name) => setTutor({ ...tutor, name }), { placeholder: 'Seu nome completo' })}
+              {textInput('E-mail', tutor.email, (email) => setTutor({ ...tutor, email }), { type: 'email', placeholder: 'seu@email.com' })}
+              {textInput('Telefone', tutor.phone, (phone) => setTutor({ ...tutor, phone }), { placeholder: '(11) 99999-9999' })}
+              {passwordFields(tutor, (passwords) => setTutor({ ...tutor, ...passwords }))}
+              <div className="flex gap-3"><Button type="button" variant="outline" className="flex-1" onClick={returnToChoice}>Voltar</Button><Button type="submit" className="flex-1" disabled={isLoading}>{isLoading ? 'Criando...' : 'Criar conta'}</Button></div>
+            </form>
+          )}
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">Telefone do Negocio *</label>
-                  <Input
-                    value={formData.businessPhone}
-                    onChange={(e) => setFormData({ ...formData, businessPhone: e.target.value })}
-                    placeholder="(11) 99999-9999"
-                    required
-                  />
-                </div>
+          {registrationType === 'business' && (
+            <form onSubmit={handleBusinessSubmit} className="space-y-4">
+              {businessStep === 1 ? <>
+                {textInput('Nome do negocio', business.businessName, (businessName) => setBusiness({ ...business, businessName }), { placeholder: 'Ex: Pet Shop Feliz' })}
+                <div><label className="mb-1 block text-sm font-medium text-[#121A48]">CNPJ (opcional)</label><Input value={business.cnpj} onChange={(event) => setBusiness({ ...business, cnpj: event.target.value })} placeholder="00.000.000/0000-00" /></div>
+                {textInput('Telefone do negocio', business.businessPhone, (businessPhone) => setBusiness({ ...business, businessPhone }), { placeholder: '(11) 99999-9999' })}
+                <div><label className="mb-1 block text-sm font-medium text-[#121A48]">E-mail do negocio (opcional)</label><Input type="email" value={business.businessEmail} onChange={(event) => setBusiness({ ...business, businessEmail: event.target.value })} placeholder="contato@seunegocio.com" /></div>
+                <div><label className="mb-2 block text-sm font-medium text-[#121A48]">Tipo de negocio *</label><div className="grid grid-cols-2 gap-2">{businessTypeOptions.map((option) => <button key={option.value} type="button" onClick={() => toggleBusinessType(option.value)} className={`rounded-lg border p-3 text-sm transition-colors ${business.businessTypes.includes(option.value) ? 'border-[#121A48] bg-[#121A48] text-white' : 'border-[#2D3F7D]/20 bg-white text-[#121A48] hover:bg-[#FFFAF3]'}`}>{option.label}</button>)}</div></div>
+                <div className="flex gap-3"><Button type="button" variant="outline" className="flex-1" onClick={returnToChoice}>Voltar</Button><Button type="button" className="flex-1" onClick={() => { if (!business.businessName || !business.businessPhone || business.businessTypes.length === 0) { toast({ title: 'Preencha todos os campos obrigatorios', variant: 'destructive' }); return; } setBusinessStep(2); }}>Continuar</Button></div>
+              </> : <>
+                {textInput('Seu nome', business.userName, (userName) => setBusiness({ ...business, userName }), { placeholder: 'Seu nome completo' })}
+                {textInput('Seu e-mail', business.userEmail, (userEmail) => setBusiness({ ...business, userEmail }), { type: 'email', placeholder: 'seu@email.com' })}
+                {textInput('Seu telefone', business.userPhone, (userPhone) => setBusiness({ ...business, userPhone }), { placeholder: '(11) 99999-9999' })}
+                {passwordFields(business, (passwords) => setBusiness({ ...business, ...passwords }))}
+                <div className="flex gap-3"><Button type="button" variant="outline" className="flex-1" onClick={() => setBusinessStep(1)}>Voltar</Button><Button type="submit" className="flex-1" disabled={isLoading}>{isLoading ? 'Criando...' : 'Criar conta'}</Button></div>
+              </>}
+            </form>
+          )}
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">Email do Negocio (opcional)</label>
-                  <Input
-                    type="email"
-                    value={formData.businessEmail}
-                    onChange={(e) => setFormData({ ...formData, businessEmail: e.target.value })}
-                    placeholder="contato@seunegocio.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Tipo de Negocio *</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {businessTypeOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => handleBusinessTypeToggle(option.value)}
-                        className={`p-3 text-sm rounded-lg border transition-colors ${
-                          formData.businessTypes.includes(option.value)
-                            ? 'bg-primary text-white border-primary'
-                            : 'bg-white hover:bg-gray-50 border-gray-200'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  className="w-full"
-                  onClick={() => {
-                    if (!formData.businessName || !formData.businessPhone || formData.businessTypes.length === 0) {
-                      toast({ title: 'Preencha todos os campos obrigatorios', variant: 'destructive' });
-                      return;
-                    }
-                    setStep(2);
-                  }}
-                >
-                  Continuar
-                </Button>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Seu Nome *</label>
-                  <Input
-                    value={formData.userName}
-                    onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
-                    placeholder="Seu nome completo"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Seu Email *</label>
-                  <Input
-                    type="email"
-                    value={formData.userEmail}
-                    onChange={(e) => setFormData({ ...formData, userEmail: e.target.value })}
-                    placeholder="seu@email.com"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Seu Telefone *</label>
-                  <Input
-                    value={formData.userPhone}
-                    onChange={(e) => setFormData({ ...formData, userPhone: e.target.value })}
-                    placeholder="(11) 99999-9999"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Senha *</label>
-                  <Input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Minimo 6 caracteres"
-                    minLength={6}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Confirmar Senha *</label>
-                  <Input
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    placeholder="Repita a senha"
-                    required
-                  />
-                </div>
-
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setStep(1)}
-                  >
-                    Voltar
-                  </Button>
-                  <Button type="submit" className="flex-1" disabled={isLoading}>
-                    {isLoading ? 'Criando...' : 'Criar Conta'}
-                  </Button>
-                </div>
-              </>
-            )}
-          </form>
-
-          <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Ja tem uma conta? </span>
-            <Link href="/login" className="text-primary hover:underline font-medium">
-              Entrar
-            </Link>
-          </div>
+          <div className="mt-6 text-center text-sm"><span className="text-slate-600">Ja tem uma conta? </span><Link href="/login" className="font-medium text-[#2D3F7D] hover:underline">Entrar</Link></div>
         </CardContent>
       </Card>
     </div>

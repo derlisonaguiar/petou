@@ -9,7 +9,8 @@ interface User {
   name: string;
   email: string;
   role: string;
-  businessId: string;
+  accountType: 'TUTOR' | 'BUSINESS' | 'PROFESSIONAL';
+  businessId: string | null;
   businessName?: string;
 }
 
@@ -23,6 +24,12 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const getPostLoginRoute = (accountType: User['accountType']) => {
+  if (accountType === 'BUSINESS') return '/dashboard';
+  if (accountType === 'TUTOR') return '/tutor';
+  return '/';
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -58,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('token', access_token);
     localStorage.setItem('refreshToken', refresh_token);
     setUser(userData);
-    router.push('/dashboard');
+    router.push(getPostLoginRoute(userData.accountType));
   };
 
   const requestOtp = async (phone: string) => {
@@ -71,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('token', access_token);
     localStorage.setItem('refreshToken', refresh_token);
     setUser(userData);
-    router.push('/dashboard');
+    router.push(getPostLoginRoute(userData.accountType));
   };
 
   const logout = () => {

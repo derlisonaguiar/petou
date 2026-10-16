@@ -2,10 +2,11 @@ import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } fr
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdoptionService } from './adoption.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BusinessContextGuard } from '../auth/guards/business-context.guard';
 
 @ApiTags('adoption')
 @Controller('adoption')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, BusinessContextGuard)
 @ApiBearerAuth()
 export class AdoptionController {
   constructor(private adoptionService: AdoptionService) {}

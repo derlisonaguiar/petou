@@ -29,12 +29,13 @@ async function main() {
   const passwordHash = await bcrypt.hash('admin123', 10);
   const admin = await prisma.user.upsert({
     where: { businessId_email: { businessId: business.id, email: 'admin@petshopdemo.com' } },
-    update: {},
+    update: { accountType: 'BUSINESS' },
     create: {
       businessId: business.id,
       name: 'Administrador',
       email: 'admin@petshopdemo.com',
       phone: '11999999999',
+      accountType: 'BUSINESS',
       role: 'OWNER',
       passwordHash,
     },
@@ -45,12 +46,13 @@ async function main() {
   // Create veterinarian
   const vet = await prisma.user.upsert({
     where: { businessId_email: { businessId: business.id, email: 'vet@petshopdemo.com' } },
-    update: {},
+    update: { accountType: 'BUSINESS' },
     create: {
       businessId: business.id,
       name: 'Dr. Carlos Silva',
       email: 'vet@petshopdemo.com',
       phone: '11988888888',
+      accountType: 'BUSINESS',
       role: 'VET',
       crmv: '12345-SP',
       passwordHash,

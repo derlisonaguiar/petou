@@ -132,6 +132,12 @@ enum UserRole {
   TRAINER
 }
 
+enum AccountType {
+  TUTOR
+  BUSINESS
+  PROFESSIONAL
+}
+
 // ===========================================
 // CORE: NEGOCIO
 // ===========================================
@@ -178,7 +184,8 @@ model Business {
 
 model User {
   id             String    @id @default(cuid())
-  businessId     String
+  businessId     String?
+  accountType    AccountType @default(BUSINESS)
   name           String
   email          String
   phone          String
@@ -195,12 +202,14 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  business        Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business        Business?         @relation(fields: [businessId], references: [id], onDelete: Cascade)
   appointments    Appointment[]
   medicalRecords  MedicalRecord[]
   vaccineRecords  VaccineRecord[]
   sales           Sale[]
   boardingUpdates BoardingUpdate[]
+  tutor           Tutor?
+  petSitter       PetSitter?
 
   @@unique([businessId, email])
   @@map("users")
@@ -212,7 +221,8 @@ model User {
 
 model Tutor {
   id               String    @id @default(cuid())
-  businessId       String
+  businessId       String?
+  userId           String?   @unique
   name             String
   cpf              String?
   email            String?
@@ -236,7 +246,8 @@ model Tutor {
   updatedAt        DateTime  @updatedAt
   lastVisitAt      DateTime?
 
-  business           Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business           Business?           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user               User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
   pets               Pet[]
   appointments       Appointment[]
   boardings          Boarding[]
@@ -251,7 +262,7 @@ model Tutor {
 
 model Pet {
   id                  String    @id @default(cuid())
-  businessId          String
+  businessId          String?
   tutorId             String?
   name                String
   species             Species
@@ -279,7 +290,7 @@ model Pet {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  business           Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business           Business?           @relation(fields: [businessId], references: [id], onDelete: Cascade)
   tutor              Tutor?              @relation(fields: [tutorId], references: [id], onDelete: SetNull)
   appointments       Appointment[]
   vaccineRecords     VaccineRecord[]
@@ -980,6 +991,7 @@ enum BookingStatus {
 
 model PetSitter {
   id                 String          @id @default(cuid())
+  userId             String?         @unique
   name               String
   email              String          @unique
   phone              String
@@ -1023,6 +1035,7 @@ model PetSitter {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
+  user     User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
   services PetSitterService[]
   bookings PetSitterBooking[]
   reviews  PetSitterReview[]

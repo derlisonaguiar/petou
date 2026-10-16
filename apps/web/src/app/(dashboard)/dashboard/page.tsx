@@ -51,36 +51,36 @@ export default function DashboardPage() {
       title: 'Total de Tutores',
       value: dashboard?.totalTutors || 0,
       icon: Users,
-      gradient: 'from-blue-500 to-blue-600',
-      bgLight: 'bg-blue-50',
-      iconColor: 'text-blue-600',
+      gradient: 'from-[#121a48] to-[#2d3f7d]',
+      bgLight: 'bg-[#eef1ff]',
+      iconColor: 'text-primary',
       href: '/dashboard/tutores',
     },
     {
       title: 'Pets Ativos',
       value: dashboard?.totalPets || 0,
       icon: Dog,
-      gradient: 'from-green-500 to-emerald-600',
-      bgLight: 'bg-green-50',
-      iconColor: 'text-green-600',
+      gradient: 'from-[#f5ae2b] to-[#e89a1b]',
+      bgLight: 'bg-[#fff6dc]',
+      iconColor: 'text-[#bd7410]',
       href: '/dashboard/pets',
     },
     {
       title: 'Agendamentos Hoje',
       value: dashboard?.todayAppointments || 0,
       icon: Calendar,
-      gradient: 'from-purple-500 to-violet-600',
-      bgLight: 'bg-purple-50',
-      iconColor: 'text-purple-600',
+      gradient: 'from-[#25366f] to-[#3b5196]',
+      bgLight: 'bg-[#eef1ff]',
+      iconColor: 'text-[#25366f]',
       href: '/dashboard/agenda',
     },
     {
       title: 'Receita do Mes',
       value: formatCurrency(dashboard?.monthRevenue || 0),
       icon: DollarSign,
-      gradient: 'from-emerald-500 to-teal-600',
-      bgLight: 'bg-emerald-50',
-      iconColor: 'text-emerald-600',
+      gradient: 'from-[#f8bc47] to-[#e89a1b]',
+      bgLight: 'bg-[#fff6dc]',
+      iconColor: 'text-[#bd7410]',
       trend: dashboard?.revenueGrowth,
       href: '/dashboard/financeiro',
     },
@@ -88,18 +88,18 @@ export default function DashboardPage() {
       title: 'Vacinas Pendentes',
       value: dashboard?.pendingVaccines || 0,
       icon: Syringe,
-      gradient: 'from-orange-500 to-amber-600',
-      bgLight: 'bg-orange-50',
-      iconColor: 'text-orange-600',
+      gradient: 'from-[#f5ae2b] to-[#e89a1b]',
+      bgLight: 'bg-[#fff6dc]',
+      iconColor: 'text-[#bd7410]',
       href: '/dashboard/vacinas',
     },
     {
       title: 'Hospedagem Ativa',
       value: dashboard?.activeBoarding || 0,
       icon: Hotel,
-      gradient: 'from-pink-500 to-rose-600',
-      bgLight: 'bg-pink-50',
-      iconColor: 'text-pink-600',
+      gradient: 'from-[#2d3f7d] to-[#465ca2]',
+      bgLight: 'bg-[#eef1ff]',
+      iconColor: 'text-[#2d3f7d]',
       href: '/dashboard/hospedagem',
     },
   ];
@@ -109,28 +109,28 @@ export default function DashboardPage() {
       title: 'Novo Agendamento',
       icon: Calendar,
       href: '/dashboard/agenda?action=new',
-      gradient: 'from-blue-500 to-blue-600',
+      gradient: 'from-[#121a48] to-[#2d3f7d]',
       description: 'Agende consultas e servicos',
     },
     {
       title: 'Cadastrar Tutor',
       icon: Users,
       href: '/dashboard/tutores?action=new',
-      gradient: 'from-green-500 to-emerald-600',
+      gradient: 'from-[#f5ae2b] to-[#e89a1b]',
       description: 'Adicione novos clientes',
     },
     {
       title: 'Cadastrar Pet',
       icon: Dog,
       href: '/dashboard/pets?action=new',
-      gradient: 'from-purple-500 to-violet-600',
+      gradient: 'from-[#25366f] to-[#3b5196]',
       description: 'Registre um novo pet',
     },
     {
       title: 'Nova Venda',
       icon: ShoppingCart,
       href: '/dashboard/vendas?action=new',
-      gradient: 'from-orange-500 to-amber-600',
+      gradient: 'from-[#f5ae2b] to-[#e89a1b]',
       description: 'Registre uma venda',
     },
   ];
@@ -138,28 +138,28 @@ export default function DashboardPage() {
   const features = [
     { icon: Syringe, label: 'Vacinas', href: '/dashboard/vacinas' },
     { icon: Hotel, label: 'Hotel', href: '/dashboard/hospedagem' },
-    { icon: Cat, label: 'Daycare', href: '/dashboard/daycare' },
+    { icon: Cat, label: 'Daycare', href: '', available: false },
     { icon: Heart, label: 'Adocao', href: '/dashboard/adocao' },
-    { icon: ShoppingCart, label: 'Marketplace', href: '/dashboard/marketplace' },
+    { icon: ShoppingCart, label: 'Marketplace', href: '', available: false },
     { icon: MessageCircle, label: 'WhatsApp', href: '/dashboard/whatsapp' },
-    { icon: BarChart3, label: 'Relatorios', href: '/dashboard/relatorios' },
+    { icon: BarChart3, label: 'Relatorios', href: '', available: false },
     { icon: DollarSign, label: 'Financeiro', href: '/dashboard/financeiro' },
   ];
 
   return (
     <div className="space-y-8 pb-8">
       {/* Header com Boas-vindas */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-8 text-white">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#121a48] via-[#1c2a61] to-[#2d3f7d] p-8 text-white">
         <div className="absolute right-0 top-0 opacity-10">
           <PawPrint className="h-64 w-64 -translate-y-8 translate-x-8" />
         </div>
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-5 w-5 text-yellow-300" />
-            <span className="text-blue-100 text-sm font-medium">Pet360 Dashboard</span>
+            <Sparkles className="h-5 w-5 text-[#f8bc47]" />
+            <span className="text-[#dce4ff] text-sm font-medium">Petou Dashboard</span>
           </div>
           <h1 className="text-3xl font-bold mb-2">Bem-vindo de volta!</h1>
-          <p className="text-blue-100 max-w-xl">
+          <p className="text-[#dce4ff] max-w-xl">
             Gerencie seu negocio pet de forma completa. Acompanhe tutores, pets, agendamentos,
             vendas e muito mais em um so lugar.
           </p>
@@ -180,7 +180,7 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Visao Geral</h2>
-          <Link href="/dashboard/relatorios" className="text-sm text-primary hover:underline flex items-center gap-1">
+          <Link href="/dashboard/analytics" className="text-sm text-primary hover:underline flex items-center gap-1">
             Ver relatorios <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -254,11 +254,21 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-4 gap-3">
-              {features.map((feature) => (
+              {features.map((feature) => feature.available === false ? (
+                <div
+                  key={feature.label}
+                  className="flex flex-col items-center gap-2 rounded-xl bg-slate-50 p-3 text-slate-400"
+                  title="Em breve"
+                >
+                  <feature.icon className="h-5 w-5" />
+                  <span className="text-xs">{feature.label}</span>
+                  <span className="text-[10px]">Em breve</span>
+                </div>
+              ) : (
                 <Link
                   key={feature.label}
                   href={feature.href}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 hover:bg-blue-50 hover:text-primary transition-colors group"
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl bg-[#fffaf3] hover:bg-[#fff1cf] hover:text-primary transition-colors group"
                 >
                   <feature.icon className="h-6 w-6 text-gray-500 group-hover:text-primary transition-colors" />
                   <span className="text-xs font-medium text-center">{feature.label}</span>
@@ -325,7 +335,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Banner Pet Sitters */}
-      <Card className="relative overflow-hidden border-0 shadow-card bg-gradient-to-br from-purple-500 via-violet-500 to-purple-600 text-white">
+      <Card className="relative overflow-hidden border-0 shadow-card bg-gradient-to-br from-[#121a48] via-[#1c2a61] to-[#2d3f7d] text-white">
         <CardContent className="p-6 md:p-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="flex-1">
@@ -333,16 +343,16 @@ export default function DashboardPage() {
                 <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium">Novo</span>
               </div>
               <h3 className="text-2xl font-bold mb-2">Marketplace & Pet Sitters</h3>
-              <p className="text-purple-100 mb-4">
+              <p className="text-[#dce4ff] mb-4">
                 Conecte-se com pet sitters qualificados e explore produtos para seus clientes no nosso marketplace integrado.
               </p>
               <div className="flex gap-3">
-                <Link href="/dashboard/pet-sitters">
-                  <Button className="bg-white text-purple-600 hover:bg-purple-50">
+                <Link href="/pet-sitters">
+                  <Button className="bg-[#f5ae2b] text-[#121a48] hover:bg-[#e89a1b]">
                     Ver Pet Sitters
                   </Button>
                 </Link>
-                <Link href="/dashboard/marketplace">
+                <Link href="/marketplace">
                   <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
                     Explorar Marketplace
                   </Button>

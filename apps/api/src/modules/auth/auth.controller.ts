@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RegisterTutorDto } from './dto/register-tutor.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -21,6 +22,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Registrar novo negocio e usuario' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @Post('register/tutor')
+  @ApiOperation({ summary: 'Registrar conta de tutor' })
+  async registerTutor(@Body() registerTutorDto: RegisterTutorDto) {
+    return this.authService.registerTutor(registerTutorDto);
   }
 
   @Post('refresh')

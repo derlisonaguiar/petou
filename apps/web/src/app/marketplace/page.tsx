@@ -41,7 +41,7 @@ export default function MarketplacePage() {
         <div className="container mx-auto py-4 px-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-2xl font-bold text-primary">
-              Pet360 Marketplace
+              Petou Marketplace
             </Link>
             <nav className="hidden md:flex items-center gap-6">
               <Link href="/marketplace" className="text-gray-700 hover:text-primary">

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import {
   Plus,
   Search,
@@ -17,61 +17,82 @@ import {
   PawPrint,
   Eye,
   Sparkles,
-} from 'lucide-react';
+} from "lucide-react";
 
-const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-  AVAILABLE: { bg: 'bg-green-50', text: 'text-green-700', label: 'Disponivel' },
-  PENDING: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Em Processo' },
-  ADOPTED: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Adotado' },
-  UNAVAILABLE: { bg: 'bg-gray-50', text: 'text-gray-700', label: 'Indisponivel' },
+const statusConfig: Record<
+  string,
+  { bg: string; text: string; label: string }
+> = {
+  AVAILABLE: { bg: "bg-green-50", text: "text-green-700", label: "Disponivel" },
+  PENDING: { bg: "bg-amber-50", text: "text-amber-700", label: "Em Processo" },
+  ADOPTED: { bg: "bg-blue-50", text: "text-blue-700", label: "Adotado" },
+  UNAVAILABLE: {
+    bg: "bg-gray-50",
+    text: "text-gray-700",
+    label: "Indisponivel",
+  },
 };
 
 export default function AdocaoPage() {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    species: 'DOG',
-    breed: '',
-    estimatedAge: '',
-    gender: 'UNKNOWN',
-    size: '',
-    description: '',
-    healthNotes: '',
-    temperament: '',
+    name: "",
+    species: "DOG",
+    breed: "",
+    estimatedAge: "",
+    gender: "UNKNOWN",
+    size: "",
+    description: "",
+    healthNotes: "",
+    temperament: "",
   });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: animalsResponse, isLoading } = useQuery({
-    queryKey: ['adoption-animals', search],
+    queryKey: ["adoption-animals", search],
     queryFn: async () => {
-      const response = await api.get('/adoption/animals', { params: { search } });
+      const response = await api.get("/adoption/animals", {
+        params: { search },
+      });
       return response.data;
     },
   });
 
   const animals = animalsResponse?.data || [];
   const totalAnimals = animalsResponse?.pagination?.total || animals.length;
-  const availableCount = animals.filter((a: any) => a.status === 'AVAILABLE').length;
+  const availableCount = animals.filter(
+    (a: any) => a.status === "AVAILABLE",
+  ).length;
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await api.post('/adoption/animals', data);
+      const response = await api.post("/adoption/animals", data);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adoption-animals'] });
-      toast({ title: 'Animal cadastrado com sucesso!' });
+      queryClient.invalidateQueries({ queryKey: ["adoption-animals"] });
+      toast({ title: "Animal cadastrado com sucesso!" });
       setShowForm(false);
-      setFormData({ name: '', species: 'DOG', breed: '', estimatedAge: '', gender: 'UNKNOWN', size: '', description: '', healthNotes: '', temperament: '' });
+      setFormData({
+        name: "",
+        species: "DOG",
+        breed: "",
+        estimatedAge: "",
+        gender: "UNKNOWN",
+        size: "",
+        description: "",
+        healthNotes: "",
+        temperament: "",
+      });
     },
     onError: (error: any) => {
       toast({
-        title: 'Erro ao cadastrar',
-        description: error.response?.data?.message || 'Tente novamente',
-        variant: 'destructive',
+        title: "Erro ao cadastrar",
+        description: error.response?.data?.message || "Tente novamente",
+        variant: "destructive",
       });
     },
   });
@@ -92,7 +113,9 @@ export default function AdocaoPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="h-5 w-5" />
-              <span className="text-rose-100 text-sm font-medium">Encontre um Lar</span>
+              <span className="text-rose-100 text-sm font-medium">
+                Encontre um Lar
+              </span>
             </div>
             <h1 className="text-2xl font-bold">Adocao</h1>
             <p className="text-rose-100 text-sm mt-1">
@@ -135,7 +158,11 @@ export default function AdocaoPage() {
                 </div>
                 <CardTitle>Cadastrar Animal para Adocao</CardTitle>
               </div>
-              <Button size="icon" variant="ghost" onClick={() => setShowForm(false)}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowForm(false)}
+              >
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -143,20 +170,28 @@ export default function AdocaoPage() {
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="grid gap-5 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Nome *</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Nome *
+                </label>
                 <Input
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Nome do animal"
                   className="h-11"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Especie *</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Especie *
+                </label>
                 <select
                   value={formData.species}
-                  onChange={(e) => setFormData({ ...formData, species: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, species: e.target.value })
+                  }
                   className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
                 >
                   <option value="DOG">Cachorro</option>
@@ -165,28 +200,40 @@ export default function AdocaoPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Raca</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Raca
+                </label>
                 <Input
                   value={formData.breed}
-                  onChange={(e) => setFormData({ ...formData, breed: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, breed: e.target.value })
+                  }
                   placeholder="Ex: SRD, Labrador"
                   className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Idade Estimada</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Idade Estimada
+                </label>
                 <Input
                   value={formData.estimatedAge}
-                  onChange={(e) => setFormData({ ...formData, estimatedAge: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, estimatedAge: e.target.value })
+                  }
                   placeholder="Ex: 2 anos"
                   className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Sexo</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Sexo
+                </label>
                 <select
                   value={formData.gender}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, gender: e.target.value })
+                  }
                   className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
                 >
                   <option value="UNKNOWN">Nao informado</option>
@@ -195,10 +242,14 @@ export default function AdocaoPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Porte</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Porte
+                </label>
                 <select
                   value={formData.size}
-                  onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, size: e.target.value })
+                  }
                   className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
                 >
                   <option value="">Selecione</option>
@@ -210,34 +261,51 @@ export default function AdocaoPage() {
                 </select>
               </div>
               <div className="md:col-span-2 space-y-2">
-                <label className="text-sm font-medium text-gray-700">Descricao</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Descricao
+                </label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-rose-500"
                   placeholder="Conte a historia do animal..."
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Temperamento</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Temperamento
+                </label>
                 <Input
                   value={formData.temperament}
-                  onChange={(e) => setFormData({ ...formData, temperament: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, temperament: e.target.value })
+                  }
                   placeholder="Ex: Docil, brincalhao"
                   className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Notas de Saude</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Notas de Saude
+                </label>
                 <Input
                   value={formData.healthNotes}
-                  onChange={(e) => setFormData({ ...formData, healthNotes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, healthNotes: e.target.value })
+                  }
                   placeholder="Ex: Castrado, vacinado"
                   className="h-11"
                 />
               </div>
               <div className="md:col-span-2 flex gap-3 justify-end pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="px-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowForm(false)}
+                  className="px-6"
+                >
                   Cancelar
                 </Button>
                 <Button
@@ -245,7 +313,9 @@ export default function AdocaoPage() {
                   disabled={createMutation.isPending}
                   className="px-6 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700"
                 >
-                  {createMutation.isPending ? 'Salvando...' : 'Cadastrar Animal'}
+                  {createMutation.isPending
+                    ? "Salvando..."
+                    : "Cadastrar Animal"}
                 </Button>
               </div>
             </form>
@@ -268,12 +338,19 @@ export default function AdocaoPage() {
             <div className="p-4 bg-rose-50 rounded-full w-fit mx-auto mb-4">
               <Heart className="h-10 w-10 text-rose-400" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Nenhum animal para adocao</h3>
+            <h3 className="font-semibold text-gray-900 mb-2">
+              Nenhum animal para adocao
+            </h3>
             <p className="text-gray-500 mb-4">
-              {search ? 'Tente buscar com outros termos' : 'Cadastre animais para encontrar um lar'}
+              {search
+                ? "Tente buscar com outros termos"
+                : "Cadastre animais para encontrar um lar"}
             </p>
             {!search && (
-              <Button onClick={() => setShowForm(true)} className="bg-gradient-to-r from-rose-500 to-pink-600">
+              <Button
+                onClick={() => setShowForm(true)}
+                className="bg-gradient-to-r from-rose-500 to-pink-600"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Cadastrar Animal
               </Button>
@@ -283,44 +360,61 @@ export default function AdocaoPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {animals?.map((animal: any) => {
-            const status = statusConfig[animal.status] || statusConfig.AVAILABLE;
+            const status =
+              statusConfig[animal.status] || statusConfig.AVAILABLE;
 
             return (
-              <Card key={animal.id} className="group border-0 shadow-card hover:shadow-card-hover transition-all overflow-hidden">
+              <Card
+                key={animal.id}
+                className="group border-0 shadow-card hover:shadow-card-hover transition-all overflow-hidden"
+              >
                 {/* Image placeholder */}
                 <div className="h-48 bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center relative">
-                  {animal.species === 'DOG' ? (
+                  {animal.species === "DOG" ? (
                     <Dog className="h-20 w-20 text-rose-300" />
-                  ) : animal.species === 'CAT' ? (
+                  ) : animal.species === "CAT" ? (
                     <Cat className="h-20 w-20 text-rose-300" />
                   ) : (
                     <Heart className="h-20 w-20 text-rose-300" />
                   )}
-                  <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}`}>
+                  <div
+                    className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}`}
+                  >
                     {status.label}
                   </div>
                 </div>
                 <CardContent className="p-5">
                   <div className="space-y-3">
                     <div>
-                      <h3 className="font-semibold text-lg text-gray-900">{animal.name}</h3>
+                      <h3 className="font-semibold text-lg text-gray-900">
+                        {animal.name}
+                      </h3>
                       <p className="text-sm text-gray-600">
-                        {animal.breed || 'SRD'} • {animal.estimatedAge || 'Idade desconhecida'}
+                        {animal.breed || "SRD"} •{" "}
+                        {animal.estimatedAge || "Idade desconhecida"}
                       </p>
                     </div>
 
                     {animal.temperament && (
                       <div className="flex flex-wrap gap-1.5">
-                        {animal.temperament.split(',').slice(0, 3).map((trait: string, i: number) => (
-                          <span key={i} className="px-2 py-0.5 bg-rose-50 text-rose-700 rounded-full text-xs">
-                            {trait.trim()}
-                          </span>
-                        ))}
+                        {animal.temperament
+                          .split(",")
+                          .slice(0, 3)
+                          .map((trait: string, i: number) => (
+                            <span
+                              key={i}
+                              className="px-2 py-0.5 bg-rose-50 text-rose-700 rounded-full text-xs"
+                            >
+                              {trait.trim()}
+                            </span>
+                          ))}
                       </div>
                     )}
 
                     {animal.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2">{animal.description}</p>
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {animal.description}
+                      </p>
                     )}
 
                     <Button className="w-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700">

@@ -2,7 +2,9 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,11 +50,16 @@ const menuItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login');
+    if (!isLoading) {
+      if (!user) {
+        router.replace('/login');
+      } else if (user.accountType !== 'BUSINESS') {
+        router.replace('/');
+      }
     }
   }, [user, isLoading, router]);
 
@@ -64,10 +71,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!user) return null;
+  if (!user || user.accountType !== 'BUSINESS') return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fffaf3]">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -78,15 +85,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-[#121a48] border-r border-[#1f306b] transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between h-16 px-4 border-b">
-          <Link href="/dashboard" className="text-xl font-bold text-primary">
-            Pet360
+        <div className="flex items-center justify-between h-16 px-4 border-b border-white/10">
+          <Link href="/dashboard" className="flex items-center">
+            <Image
+              src="/images/petou-logo.jpeg"
+              alt="Petou"
+              width={77}
+              height={48}
+              className="h-12 w-auto"
+            />
           </Link>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white">
             <X className="h-6 w-6" />
           </button>
         </div>
@@ -96,7 +109,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
+              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                pathname === item.href
+                  ? 'bg-[#f5ae2b] text-[#121a48] font-semibold shadow-sm'
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+              }`}
               onClick={() => setSidebarOpen(false)}
             >
               <item.icon className="h-5 w-5" />
@@ -105,17 +122,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#121a48]">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user.name}</p>
-              <p className="text-xs text-gray-500 truncate">{user.role}</p>
+              <p className="text-sm font-medium text-white truncate">{user.name}</p>
+              <p className="text-xs text-white/60 truncate">{user.role}</p>
             </div>
           </div>
-          <Button variant="outline" className="w-full" onClick={logout}>
+          <Button variant="outline" className="w-full border-white/30 bg-white/10 text-white hover:bg-[#f5ae2b] hover:text-[#121a48]" onClick={logout}>
             <LogOut className="h-4 w-4 mr-2" />
             Sair
           </Button>
@@ -125,10 +142,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main Content */}
       <div className="lg:ml-64">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 h-16 bg-white border-b flex items-center px-4">
+        <header className="sticky top-0 z-30 h-16 bg-white/95 border-b border-[#eee4d3] flex items-center px-4 backdrop-blur-sm">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-md hover:bg-gray-100"
+            className="lg:hidden p-2 rounded-md hover:bg-[#fff4d7]"
           >
             <Menu className="h-6 w-6" />
           </button>

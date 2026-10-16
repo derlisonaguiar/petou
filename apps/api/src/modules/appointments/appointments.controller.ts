@@ -2,10 +2,13 @@ import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } fr
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BusinessContextGuard } from '../auth/guards/business-context.guard';
+import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
 @ApiTags('appointments')
 @Controller('appointments')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, BusinessContextGuard)
 @ApiBearerAuth()
 export class AppointmentsController {
   constructor(private appointmentsService: AppointmentsService) {}
@@ -41,13 +44,13 @@ export class AppointmentsController {
 
   @Post()
   @ApiOperation({ summary: 'Criar agendamento' })
-  async create(@Body() data: any, @Request() req: any) {
+  async create(@Body() data: CreateAppointmentDto, @Request() req: any) {
     return this.appointmentsService.create(req.user.businessId, data);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Atualizar agendamento' })
-  async update(@Param('id') id: string, @Body() data: any, @Request() req: any) {
+  async update(@Param('id') id: string, @Body() data: UpdateAppointmentDto, @Request() req: any) {
     return this.appointmentsService.update(id, req.user.businessId, data);
   }
 

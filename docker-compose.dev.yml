@@ -6,7 +6,7 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine3.23
     container_name: pet360-postgres-dev
     restart: unless-stopped
     environment:
@@ -16,7 +16,7 @@ services:
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pet360"]
       interval: 5s
@@ -48,7 +48,7 @@ services:
 
   # Evolution API (WhatsApp) - Development
   evolution:
-    image: atendai/evolution-api:latest
+    image: evoapicloud/evolution-api:latest
     container_name: pet360-evolution-dev
     restart: unless-stopped
     environment:

@@ -2,10 +2,11 @@ import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } fr
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BoardingService } from './boarding.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BusinessContextGuard } from '../auth/guards/business-context.guard';
 
 @ApiTags('boarding')
 @Controller('boarding')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, BusinessContextGuard)
 @ApiBearerAuth()
 export class BoardingController {
   constructor(private boardingService: BoardingService) {}
