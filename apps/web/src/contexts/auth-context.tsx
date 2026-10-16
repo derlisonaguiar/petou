@@ -28,6 +28,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const getPostLoginRoute = (accountType: User['accountType']) => {
   if (accountType === 'BUSINESS') return '/dashboard';
   if (accountType === 'TUTOR') return '/tutor';
+  if (accountType === 'PROFESSIONAL') return '/profissional';
   return '/';
 };
 

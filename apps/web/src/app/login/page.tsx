@@ -78,7 +78,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md border-primary/10 shadow-[0_16px_40px_-24px_rgba(18,26,72,0.45)]">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-primary">Entrar no Petou</CardTitle>
-          <CardDescription>Acesse sua conta para gerenciar seu negocio</CardDescription>
+          <CardDescription>Acesse sua área de tutor, negócio pet ou profissional.</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Login Method Tabs */}

@@ -15,7 +15,7 @@ const businessTypeOptions = [
   { value: 'DAYCARE', label: 'Daycare / Creche' }, { value: 'ADOPTION_CENTER', label: 'Centro de Adocao' },
 ];
 
-type RegistrationType = 'choice' | 'business' | 'tutor';
+type RegistrationType = 'choice' | 'business' | 'tutor' | 'professional';
 
 export default function RegisterPage() {
   const [registrationType, setRegistrationType] = useState<RegistrationType>('choice');
@@ -23,6 +23,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [business, setBusiness] = useState({ businessName: '', cnpj: '', businessPhone: '', businessEmail: '', businessTypes: [] as string[], userName: '', userEmail: '', userPhone: '', password: '', confirmPassword: '' });
   const [tutor, setTutor] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
+  const [professional, setProfessional] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '', bio: '' });
   const router = useRouter();
   const { toast } = useToast();
 
@@ -68,6 +69,28 @@ export default function RegisterPage() {
     } finally { setIsLoading(false); }
   };
 
+  const handleProfessionalSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (professional.password !== professional.confirmPassword) {
+      toast({ title: 'As senhas nao conferem', variant: 'destructive' });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await api.post('/auth/register/professional', {
+        name: professional.name,
+        email: professional.email,
+        phone: professional.phone,
+        password: professional.password,
+        bio: professional.bio || undefined,
+      });
+      toast({ title: 'Conta criada com sucesso!' });
+      router.push('/login?registered=true');
+    } catch (error: any) {
+      toast({ title: 'Erro ao criar conta', description: error.response?.data?.message || 'Tente novamente', variant: 'destructive' });
+    } finally { setIsLoading(false); }
+  };
+
   const textInput = (label: string, value: string, setValue: (value: string) => void, options: { type?: string; placeholder?: string } = {}) => (
     <div>
       <label className="mb-1 block text-sm font-medium text-[#121A48]">{label} *</label>
@@ -82,14 +105,14 @@ export default function RegisterPage() {
     </>
   );
 
-  const description = registrationType === 'choice' ? 'Escolha como voce quer usar o Petou' : registrationType === 'tutor' ? 'Encontre servicos e cuide da rotina do seu pet' : businessStep === 1 ? 'Dados do seu negocio' : 'Seus dados de acesso';
+  const description = registrationType === 'choice' ? 'Escolha como voce quer usar o Petou' : registrationType === 'tutor' ? 'Encontre servicos e cuide da rotina do seu pet' : registrationType === 'professional' ? 'Ofereca seus cuidados como profissional independente' : businessStep === 1 ? 'Dados do seu negocio' : 'Seus dados de acesso';
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#FFFAF3] via-[#fffdf8] to-[#eef1fb] p-4">
       <Card className="w-full max-w-lg border-[#121A48]/10 shadow-[0_16px_40px_-24px_rgba(18,26,72,0.45)]">
         <CardHeader className="text-center">
           <Link href="/" className="mb-2 block text-2xl font-bold text-[#121A48]">Petou</Link>
-          <CardTitle className="text-[#121A48]">{registrationType === 'tutor' ? 'Criar conta de tutor' : 'Criar conta'}</CardTitle>
+          <CardTitle className="text-[#121A48]">{registrationType === 'tutor' ? 'Criar conta de tutor' : registrationType === 'professional' ? 'Criar conta profissional' : 'Criar conta'}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -103,6 +126,10 @@ export default function RegisterPage() {
                 <span className="block text-base font-semibold text-[#121A48]">Tenho um negocio pet</span>
                 <span className="mt-1 block text-sm text-slate-600">Quero organizar meu negocio e ser encontrado por clientes.</span>
               </button>
+              <button type="button" onClick={() => setRegistrationType('professional')} className="w-full rounded-xl border border-[#2D3F7D]/20 bg-white p-5 text-left transition hover:border-[#F5AE2B] hover:bg-[#FFFAF3] focus:outline-none focus:ring-2 focus:ring-[#F5AE2B]">
+                <span className="block text-base font-semibold text-[#121A48]">Sou profissional pet</span>
+                <span className="mt-1 block text-sm text-slate-600">Quero oferecer meus cuidados de forma independente.</span>
+              </button>
             </div>
           )}
 
@@ -112,6 +139,17 @@ export default function RegisterPage() {
               {textInput('E-mail', tutor.email, (email) => setTutor({ ...tutor, email }), { type: 'email', placeholder: 'seu@email.com' })}
               {textInput('Telefone', tutor.phone, (phone) => setTutor({ ...tutor, phone }), { placeholder: '(11) 99999-9999' })}
               {passwordFields(tutor, (passwords) => setTutor({ ...tutor, ...passwords }))}
+              <div className="flex gap-3"><Button type="button" variant="outline" className="flex-1" onClick={returnToChoice}>Voltar</Button><Button type="submit" className="flex-1" disabled={isLoading}>{isLoading ? 'Criando...' : 'Criar conta'}</Button></div>
+            </form>
+          )}
+
+          {registrationType === 'professional' && (
+            <form onSubmit={handleProfessionalSubmit} className="space-y-4">
+              {textInput('Nome', professional.name, (name) => setProfessional({ ...professional, name }), { placeholder: 'Seu nome completo' })}
+              {textInput('E-mail', professional.email, (email) => setProfessional({ ...professional, email }), { type: 'email', placeholder: 'seu@email.com' })}
+              {textInput('Telefone', professional.phone, (phone) => setProfessional({ ...professional, phone }), { placeholder: '(11) 99999-9999' })}
+              <div><label className="mb-1 block text-sm font-medium text-[#121A48]">Bio (opcional)</label><textarea value={professional.bio} onChange={(event) => setProfessional({ ...professional, bio: event.target.value })} placeholder="Conte brevemente sobre sua experiencia" className="flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" /></div>
+              {passwordFields(professional, (passwords) => setProfessional({ ...professional, ...passwords }))}
               <div className="flex gap-3"><Button type="button" variant="outline" className="flex-1" onClick={returnToChoice}>Voltar</Button><Button type="submit" className="flex-1" disabled={isLoading}>{isLoading ? 'Criando...' : 'Criar conta'}</Button></div>
             </form>
           )}

@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { RegisterTutorDto } from '../auth/dto/register-tutor.dto';
+import { RegisterProfessionalDto } from '../auth/dto/register-professional.dto';
 
 @Injectable()
 export class UsersService {
@@ -138,6 +139,58 @@ export class UsersService {
     return {
       user: userWithoutPassword,
       tutor: result.tutor,
+    };
+  }
+
+  async createProfessionalAccount(dto: RegisterProfessionalDto) {
+    const existingUser = await this.findByEmail(dto.email);
+    if (existingUser) {
+      throw new ConflictException('Email ja cadastrado');
+    }
+
+    const existingPetSitter = await this.prisma.petSitter.findUnique({
+      where: { email: dto.email },
+    });
+    if (existingPetSitter) {
+      throw new ConflictException('Email ja cadastrado');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    const result = await this.prisma.$transaction(async (prisma) => {
+      const user = await prisma.user.create({
+        data: {
+          name: dto.name,
+          email: dto.email,
+          phone: dto.phone,
+          passwordHash,
+          accountType: 'PROFESSIONAL',
+          businessId: null,
+        },
+      });
+
+      const petSitter = await prisma.petSitter.create({
+        data: {
+          userId: user.id,
+          name: dto.name,
+          email: dto.email,
+          phone: dto.phone,
+          bio: dto.bio,
+          photos: [],
+          acceptedSpecies: [],
+          acceptedSizes: [],
+          certifications: [],
+          documentsUrl: [],
+        },
+      });
+
+      return { user, petSitter };
+    });
+
+    const { passwordHash: _, ...userWithoutPassword } = result.user;
+    return {
+      user: userWithoutPassword,
+      petSitter: result.petSitter,
     };
   }
 

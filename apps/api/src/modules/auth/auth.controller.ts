@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterTutorDto } from './dto/register-tutor.dto';
+import { RegisterProfessionalDto } from './dto/register-professional.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -28,6 +29,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Registrar conta de tutor' })
   async registerTutor(@Body() registerTutorDto: RegisterTutorDto) {
     return this.authService.registerTutor(registerTutorDto);
+  }
+
+  @Post('register/professional')
+  @ApiOperation({ summary: 'Registrar conta de profissional independente' })
+  async registerProfessional(@Body() registerProfessionalDto: RegisterProfessionalDto) {
+    return this.authService.registerProfessional(registerProfessionalDto);
   }
 
   @Post('refresh')

@@ -160,8 +160,8 @@ export default function DashboardPage() {
           </div>
           <h1 className="text-3xl font-bold mb-2">Bem-vindo de volta!</h1>
           <p className="text-[#dce4ff] max-w-xl">
-            Gerencie seu negocio pet de forma completa. Acompanhe tutores, pets, agendamentos,
-            vendas e muito mais em um so lugar.
+            Acompanhe tutores, pets, agenda, produtos, estoque, vendas e financeiro
+            na rotina do seu negócio.
           </p>
         </div>
         <div className="absolute bottom-0 right-8 hidden lg:block">
@@ -334,30 +334,18 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Banner Pet Sitters */}
+      {/* Recursos futuros */}
       <Card className="relative overflow-hidden border-0 shadow-card bg-gradient-to-br from-[#121a48] via-[#1c2a61] to-[#2d3f7d] text-white">
         <CardContent className="p-6 md:p-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium">Novo</span>
+                <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium">Em construção</span>
               </div>
-              <h3 className="text-2xl font-bold mb-2">Marketplace & Pet Sitters</h3>
+              <h3 className="text-2xl font-bold mb-2">Marketplace e profissionais independentes</h3>
               <p className="text-[#dce4ff] mb-4">
-                Conecte-se com pet sitters qualificados e explore produtos para seus clientes no nosso marketplace integrado.
+                Estes recursos ainda estão sendo preparados e não fazem parte da operação demonstrável atual.
               </p>
-              <div className="flex gap-3">
-                <Link href="/pet-sitters">
-                  <Button className="bg-[#f5ae2b] text-[#121a48] hover:bg-[#e89a1b]">
-                    Ver Pet Sitters
-                  </Button>
-                </Link>
-                <Link href="/marketplace">
-                  <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
-                    Explorar Marketplace
-                  </Button>
-                </Link>
-              </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6">

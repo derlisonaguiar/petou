@@ -6,6 +6,7 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterTutorDto } from './dto/register-tutor.dto';
+import { RegisterProfessionalDto } from './dto/register-professional.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -68,6 +69,10 @@ export class AuthService {
 
   async registerTutor(registerTutorDto: RegisterTutorDto) {
     return this.usersService.createTutorAccount(registerTutorDto);
+  }
+
+  async registerProfessional(registerProfessionalDto: RegisterProfessionalDto) {
+    return this.usersService.createProfessionalAccount(registerProfessionalDto);
   }
 
   async refreshToken(token: string) {
