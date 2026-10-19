@@ -138,6 +138,12 @@ enum AccountType {
   PROFESSIONAL
 }
 
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // ===========================================
 // CORE: NEGOCIO
 // ===========================================
@@ -155,6 +161,8 @@ model Business {
   state               String?
   zipCode             String?
   logoUrl             String?
+  galleryImages       String[] @default([])
+  registrationStatus  RegistrationStatus @default(PENDING)
   whatsappInstanceId  String?
   whatsappConnected   Boolean  @default(false)
   settings            Json     @default("{}")
@@ -166,6 +174,7 @@ model Business {
   tutors          Tutor[]
   pets            Pet[]
   services        Service[]
+  reviews         BusinessReview[]
   appointments    Appointment[]
   adoptionAnimals AdoptionAnimal[]
   boardingRooms   BoardingRoom[]
@@ -197,6 +206,7 @@ model User {
   otpCode        String?
   otpExpiresAt   DateTime?
   isActive       Boolean   @default(true)
+  isPlatformAdmin Boolean @default(false)
   commissionRate Decimal?  @db.Decimal(5, 2)
   avatarUrl      String?
   createdAt      DateTime  @default(now())
@@ -250,6 +260,7 @@ model Tutor {
   user               User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
   pets               Pet[]
   appointments       Appointment[]
+  businessReviews    BusinessReview[]
   boardings          Boarding[]
   daycareEnrollments DaycareEnrollment[]
   sales              Sale[]
@@ -755,12 +766,32 @@ model Appointment {
   professional   User            @relation(fields: [professionalId], references: [id])
   medicalRecords MedicalRecord[]
   vaccineRecords VaccineRecord[]
+  review         BusinessReview?
 
   @@index([businessId, scheduledDate])
   @@index([professionalId, scheduledDate])
   @@index([petId])
   @@index([status])
   @@map("appointments")
+}
+
+model BusinessReview {
+  id            String   @id @default(cuid())
+  businessId    String
+  tutorId       String
+  appointmentId String   @unique
+  rating        Int
+  comment       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  business    Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  tutor       Tutor       @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+  @@index([tutorId])
+  @@map("business_reviews")
 }
 
 // ===========================================
@@ -1016,6 +1047,7 @@ model PetSitter {
   hasOtherPets       Boolean         @default(false)
   otherPetsDetails   String?
   status             PetSitterStatus @default(PENDING_APPROVAL)
+  registrationStatus RegistrationStatus @default(PENDING)
   approvedAt         DateTime?
   rejectionReason    String?
   documentsUrl       String[]

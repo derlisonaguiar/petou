@@ -9,7 +9,7 @@ async function main() {
   // Create demo business
   const business = await prisma.business.upsert({
     where: { slug: 'petshop-demo' },
-    update: {},
+    update: { registrationStatus: 'APPROVED' },
     create: {
       name: 'PetShop Demo',
       slug: 'petshop-demo',
@@ -20,6 +20,7 @@ async function main() {
       city: 'Sao Paulo',
       state: 'SP',
       zipCode: '01310-100',
+      registrationStatus: 'APPROVED',
     },
   });
 
@@ -29,14 +30,15 @@ async function main() {
   const passwordHash = await bcrypt.hash('admin123', 10);
   const admin = await prisma.user.upsert({
     where: { businessId_email: { businessId: business.id, email: 'admin@petshopdemo.com' } },
-    update: { accountType: 'BUSINESS' },
+    update: { accountType: 'BUSINESS', role: 'ADMIN', isPlatformAdmin: true },
     create: {
       businessId: business.id,
       name: 'Administrador',
       email: 'admin@petshopdemo.com',
       phone: '11999999999',
       accountType: 'BUSINESS',
-      role: 'OWNER',
+      role: 'ADMIN',
+      isPlatformAdmin: true,
       passwordHash,
     },
   });

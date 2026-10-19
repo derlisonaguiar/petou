@@ -41,6 +41,8 @@ export default function ProfessionalPage() {
           <h1 className="mt-2 text-3xl font-bold">Ola, {firstName}!</h1>
           <p className="mt-2 max-w-xl text-white/80">Prepare seu perfil profissional para atender ainda melhor os pets.</p>
         </section>
+        {user.registrationStatus === 'PENDING' && <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><strong>Seu perfil está em análise.</strong> Você será avisado quando a aprovação for concluída.</div>}
+        {user.registrationStatus === 'REJECTED' && <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"><strong>Seu perfil não foi aprovado.</strong> Ele permanece oculto publicamente.</div>}
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {shortcuts.map((shortcut) => {
             const Icon = shortcut.icon;

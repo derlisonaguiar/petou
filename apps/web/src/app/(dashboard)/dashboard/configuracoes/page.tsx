@@ -17,7 +17,14 @@ import {
   Save,
   PawPrint,
   CheckCircle,
+  ImagePlus,
+  Trash2,
 } from 'lucide-react';
+
+const MAX_GALLERY_IMAGES = 6;
+const MAX_GALLERY_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_GALLERY_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const publicImageUrl = (imageUrl: string) => imageUrl.startsWith('http') ? imageUrl : `${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/$/, '')}${imageUrl}`;
 
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState('business');
@@ -105,6 +112,31 @@ export default function ConfiguracoesPage() {
     },
   });
 
+  const uploadGalleryMutation = useMutation({
+    mutationFn: async (files: File[]) => {
+      const formData = new FormData();
+      files.forEach((file) => formData.append('photos', file));
+      return (await api.post('/businesses/current/gallery', formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business-settings'] });
+      toast({ title: 'Fotos adicionadas à galeria.' });
+    },
+    onError: (error: any) => toast({ title: 'Não foi possível adicionar as fotos', description: error.response?.data?.message || 'Tente novamente.', variant: 'destructive' }),
+  });
+
+  const removeGalleryMutation = useMutation({
+    mutationFn: async (imageUrl: string) => {
+      const fileName = imageUrl.split('/').pop();
+      return (await api.delete(`/businesses/current/gallery/${encodeURIComponent(fileName || '')}`)).data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['business-settings'] });
+      toast({ title: 'Foto removida da galeria.' });
+    },
+    onError: (error: any) => toast({ title: 'Não foi possível remover a foto', description: error.response?.data?.message || 'Tente novamente.', variant: 'destructive' }),
+  });
+
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await api.patch('/auth/profile', data);
@@ -127,6 +159,22 @@ export default function ConfiguracoesPage() {
   const handleBusinessSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateBusinessMutation.mutate(businessForm);
+  };
+
+  const handleGalleryUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+    const galleryImages = business.galleryImages || [];
+    if (!files.length) return;
+    if (galleryImages.length + files.length > MAX_GALLERY_IMAGES) {
+      toast({ title: `A galeria permite no máximo ${MAX_GALLERY_IMAGES} fotos.`, variant: 'destructive' });
+      return;
+    }
+    if (files.some((file) => !ALLOWED_GALLERY_TYPES.includes(file.type) || file.size > MAX_GALLERY_FILE_SIZE)) {
+      toast({ title: 'Envie apenas JPG, PNG ou WEBP de até 5 MB por foto.', variant: 'destructive' });
+      return;
+    }
+    uploadGalleryMutation.mutate(files);
   };
 
   const handleProfileSubmit = (e: React.FormEvent) => {
@@ -288,6 +336,10 @@ export default function ConfiguracoesPage() {
                     </Button>
                   </div>
                 </form>
+                <div className="mt-8 border-t pt-6">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between"><div><h3 className="font-semibold text-gray-900">Galeria do estabelecimento</h3><p className="text-sm text-gray-500">Adicione até {MAX_GALLERY_IMAGES} fotos JPG, PNG ou WEBP de até 5 MB cada.</p></div><label className={`mt-3 inline-flex w-fit cursor-pointer items-center rounded-md bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 sm:mt-0 ${(business.galleryImages || []).length >= MAX_GALLERY_IMAGES || uploadGalleryMutation.isPending ? 'pointer-events-none opacity-50' : ''}`}><ImagePlus className="mr-2 h-4 w-4" />{uploadGalleryMutation.isPending ? 'Enviando...' : 'Adicionar fotos'}<input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple onChange={handleGalleryUpload} disabled={(business.galleryImages || []).length >= MAX_GALLERY_IMAGES || uploadGalleryMutation.isPending} /></label></div>
+                  {(business.galleryImages || []).length === 0 ? <p className="mt-5 rounded-lg bg-gray-50 p-4 text-sm text-gray-500">Nenhuma foto adicionada ainda.</p> : <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">{business.galleryImages.map((imageUrl: string, index: number) => <div key={imageUrl} className="group relative aspect-square overflow-hidden rounded-xl border bg-gray-50"><img src={publicImageUrl(imageUrl)} alt={`Foto ${index + 1} do estabelecimento`} className="h-full w-full object-cover" /><button type="button" onClick={() => removeGalleryMutation.mutate(imageUrl)} disabled={removeGalleryMutation.isPending} className="absolute right-2 top-2 rounded-full bg-white p-2 text-red-600 shadow hover:bg-red-50 disabled:opacity-50" aria-label={`Remover foto ${index + 1}`}><Trash2 className="h-4 w-4" /></button></div>)}</div>}
+                </div>
               </CardContent>
             </Card>
           )}

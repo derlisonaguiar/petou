@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
@@ -12,7 +12,7 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      include: { business: true },
+      include: { business: true, petSitter: true },
     });
     return user;
   }
@@ -20,7 +20,7 @@ export class UsersService {
   async findByEmail(email: string) {
     return this.prisma.user.findFirst({
       where: { email },
-      include: { business: true },
+      include: { business: true, petSitter: true },
     });
   }
 
@@ -77,6 +77,7 @@ export class UsersService {
           phone: dto.businessPhone,
           email: dto.businessEmail,
           businessTypes: dto.businessTypes,
+          registrationStatus: 'PENDING',
         },
       });
 
@@ -181,6 +182,7 @@ export class UsersService {
           acceptedSizes: [],
           certifications: [],
           documentsUrl: [],
+          registrationStatus: 'PENDING',
         },
       });
 
@@ -229,5 +231,34 @@ export class UsersService {
   async deleteInBusiness(id: string, businessId: string) {
     await this.findOneInBusiness(id, businessId);
     return this.delete(id);
+  }
+
+  async listPendingRegistrations() {
+    const [businesses, professionals] = await Promise.all([
+      this.prisma.business.findMany({
+        where: { registrationStatus: 'PENDING' },
+        select: { id: true, name: true, email: true, phone: true, businessTypes: true, createdAt: true, registrationStatus: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.petSitter.findMany({
+        where: { registrationStatus: 'PENDING' },
+        select: { id: true, name: true, email: true, phone: true, bio: true, createdAt: true, registrationStatus: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+    ]);
+    return { businesses, professionals };
+  }
+
+  async reviewBusinessRegistration(id: string, registrationStatus: 'APPROVED' | 'REJECTED') {
+    return this.prisma.business.update({ where: { id }, data: { registrationStatus } });
+  }
+
+  async reviewProfessionalRegistration(id: string, registrationStatus: 'APPROVED' | 'REJECTED') {
+    return this.prisma.petSitter.update({ where: { id }, data: { registrationStatus } });
+  }
+
+  validateRegistrationDecision(status: string) {
+    if (status !== 'APPROVED' && status !== 'REJECTED') throw new BadRequestException('Use APPROVED ou REJECTED.');
+    return status;
   }
 }

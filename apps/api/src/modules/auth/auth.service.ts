@@ -44,6 +44,7 @@ export class AuthService {
       businessId: user.businessId,
       role: user.role,
       accountType: user.accountType,
+      isPlatformAdmin: user.isPlatformAdmin,
     };
 
     return {
@@ -59,6 +60,8 @@ export class AuthService {
         role: user.role,
         businessId: user.businessId,
         accountType: user.accountType,
+        isPlatformAdmin: user.isPlatformAdmin,
+        registrationStatus: user.business?.registrationStatus || user.petSitter?.registrationStatus,
       },
     };
   }
@@ -92,6 +95,7 @@ export class AuthService {
         businessId: user.businessId,
         role: user.role,
         accountType: user.accountType,
+        registrationStatus: user.business?.registrationStatus || user.petSitter?.registrationStatus,
       };
 
       return {
@@ -167,7 +171,7 @@ export class AuthService {
     // Buscar usuario
     const user = await this.prisma.user.findFirst({
       where: { phone: normalizedPhone },
-      include: { business: true },
+      include: { business: true, petSitter: true },
     });
 
     if (!user || !user.isActive) {
@@ -180,6 +184,7 @@ export class AuthService {
       businessId: user.businessId,
       role: user.role,
       accountType: user.accountType,
+      isPlatformAdmin: user.isPlatformAdmin,
     };
 
     return {
@@ -195,6 +200,8 @@ export class AuthService {
         role: user.role,
         businessId: user.businessId,
         accountType: user.accountType,
+        isPlatformAdmin: user.isPlatformAdmin,
+        registrationStatus: user.business?.registrationStatus || user.petSitter?.registrationStatus,
         businessName: user.business?.name,
       },
     };

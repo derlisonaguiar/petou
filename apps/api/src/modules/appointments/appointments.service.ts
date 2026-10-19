@@ -71,6 +71,7 @@ export class AppointmentsService {
         business: { select: { name: true, slug: true, logoUrl: true } },
         service: { select: { name: true } },
         pet: { select: { name: true, species: true, photoUrl: true } },
+        review: { select: { id: true, rating: true } },
       },
       orderBy: [{ scheduledDate: 'desc' }, { scheduledTime: 'desc' }],
     });

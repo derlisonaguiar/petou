@@ -1,10 +1,12 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
 # Install OpenSSL for Prisma
-RUN apk add --no-cache openssl
+RUN apt-get update \
+    && apt-get install -y openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -36,12 +38,14 @@ WORKDIR /app/apps/api
 RUN /app/node_modules/.bin/nest build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:20-bookworm-slim AS production
 
 WORKDIR /app
 
 # Install OpenSSL for Prisma
-RUN apk add --no-cache openssl
+RUN apt-get update \
+    && apt-get install -y openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate

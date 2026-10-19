@@ -1,10 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { mkdir, unlink, writeFile } from 'fs/promises';
+import { extname, join } from 'path';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { BadRequestException } from '@nestjs/common';
 import { CreatePublicAppointmentDto } from './dto/create-public-appointment.dto';
 
 @Injectable()
 export class BusinessesService {
+  private static readonly MAX_GALLERY_IMAGES = 6;
+  private static readonly MAX_GALLERY_FILE_SIZE = 5 * 1024 * 1024;
+  private static readonly GALLERY_MIME_TYPES: Record<string, string> = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+  };
+  private static readonly GALLERY_DIRECTORY = join(process.cwd(), 'uploads', 'business-gallery');
+
   constructor(private prisma: PrismaService) {}
 
   async findOne(id: string) {
@@ -24,9 +35,10 @@ export class BusinessesService {
   }
 
   async findPublicBySlug(slug: string) {
-    const business = await this.prisma.business.findUnique({
-      where: { slug },
+    const business = await this.prisma.business.findFirst({
+      where: { slug, registrationStatus: 'APPROVED' },
       select: {
+        id: true,
         name: true,
         slug: true,
         businessTypes: true,
@@ -37,6 +49,8 @@ export class BusinessesService {
         state: true,
         zipCode: true,
         logoUrl: true,
+        galleryImages: true,
+        registrationStatus: true,
         openingHours: true,
         services: {
           where: { isActive: true },
@@ -52,15 +66,21 @@ export class BusinessesService {
           },
           orderBy: { name: 'asc' },
         },
+        reviews: {
+          select: { id: true, rating: true, comment: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
       },
     });
 
     if (!business) throw new NotFoundException('Negocio nao encontrado');
-    return business;
+    const reviewStats = await this.prisma.businessReview.aggregate({ where: { businessId: business.id }, _avg: { rating: true }, _count: true });
+    return { ...business, reviewSummary: { averageRating: Number(reviewStats._avg.rating || 0), totalReviews: reviewStats._count } };
   }
 
   async createPublicAppointment(slug: string, userId: string, dto: CreatePublicAppointmentDto) {
-    const business = await this.prisma.business.findUnique({ where: { slug }, select: { id: true } });
+    const business = await this.prisma.business.findFirst({ where: { slug, registrationStatus: 'APPROVED' }, select: { id: true } });
     if (!business) throw new NotFoundException('Negocio nao encontrado');
 
     const tutor = await this.prisma.tutor.findUnique({ where: { userId } });
@@ -95,11 +115,13 @@ export class BusinessesService {
   }
 
   async findAllPublic(query?: { search?: string; businessType?: string }) {
-    const where: any = {};
+    const where: any = { registrationStatus: 'APPROVED' };
     if (query?.search) {
       where.name = { contains: query.search, mode: 'insensitive' };
     }
-    if (query?.businessType) {
+    if (query?.businessType === 'HOSPITALITY') {
+      where.businessTypes = { hasSome: ['HOTEL', 'DAYCARE'] };
+    } else if (query?.businessType) {
       where.businessTypes = { has: query.businessType };
     }
 
@@ -115,9 +137,56 @@ export class BusinessesService {
         state: true,
         logoUrl: true,
         _count: { select: { services: { where: { isActive: true } } } },
+        services: { where: { isActive: true, price: { gt: 0 } }, select: { price: true } },
       },
       orderBy: { name: 'asc' },
+    }).then((businesses) => businesses.map(({ services, ...business }) => ({
+      ...business,
+      lowestServicePrice: services.length ? Math.min(...services.map((service) => Number(service.price))) : null,
+    })));
+  }
+
+  async addGalleryImages(businessId: string, photos: Array<{ buffer: Buffer; mimetype: string; originalname: string; size: number }>) {
+    const business = await this.prisma.business.findUnique({ where: { id: businessId }, select: { galleryImages: true } });
+    if (!business) throw new NotFoundException('Negócio não encontrado');
+    if (business.galleryImages.length + photos.length > BusinessesService.MAX_GALLERY_IMAGES) {
+      throw new BadRequestException(`A galeria permite no máximo ${BusinessesService.MAX_GALLERY_IMAGES} fotos.`);
+    }
+
+    for (const photo of photos) {
+      const extension = extname(photo.originalname).toLowerCase();
+      if (BusinessesService.GALLERY_MIME_TYPES[photo.mimetype] !== extension) {
+        throw new BadRequestException('Envie apenas imagens JPG, PNG ou WEBP.');
+      }
+      if (!photo.buffer?.length || photo.size > BusinessesService.MAX_GALLERY_FILE_SIZE) {
+        throw new BadRequestException('Cada imagem deve ter no máximo 5 MB.');
+      }
+    }
+
+    await mkdir(BusinessesService.GALLERY_DIRECTORY, { recursive: true });
+    const imageUrls = await Promise.all(photos.map(async (photo) => {
+      const fileName = `${randomUUID()}${BusinessesService.GALLERY_MIME_TYPES[photo.mimetype]}`;
+      await writeFile(join(BusinessesService.GALLERY_DIRECTORY, fileName), photo.buffer);
+      return `/media/${fileName}`;
+    }));
+
+    return this.prisma.business.update({
+      where: { id: businessId },
+      data: { galleryImages: [...business.galleryImages, ...imageUrls] },
+      select: { galleryImages: true },
     });
+  }
+
+  async removeGalleryImage(businessId: string, fileName: string) {
+    if (!/^[0-9a-f-]{36}\.(jpg|png|webp)$/.test(fileName)) throw new BadRequestException('Foto inválida.');
+    const imageUrl = `/media/${fileName}`;
+    const business = await this.prisma.business.findUnique({ where: { id: businessId }, select: { galleryImages: true } });
+    if (!business || !business.galleryImages.includes(imageUrl)) throw new NotFoundException('Foto não encontrada para este negócio.');
+
+    const galleryImages = business.galleryImages.filter((url) => url !== imageUrl);
+    await this.prisma.business.update({ where: { id: businessId }, data: { galleryImages }, select: { galleryImages: true } });
+    await unlink(join(BusinessesService.GALLERY_DIRECTORY, fileName)).catch(() => undefined);
+    return { galleryImages };
   }
 
   async update(id: string, data: any) {

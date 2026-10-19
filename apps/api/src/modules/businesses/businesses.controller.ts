@@ -1,4 +1,5 @@
-import { Controller, Get, Put, Body, UseGuards, Request } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Request, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BusinessesService } from './businesses.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -33,5 +34,19 @@ export class BusinessesController {
   @ApiOperation({ summary: 'Atualizar configuracoes' })
   async updateSettings(@Request() req: any, @Body() settings: any) {
     return this.businessesService.updateSettings(req.user.businessId, settings);
+  }
+
+  @Post('current/gallery')
+  @UseInterceptors(FilesInterceptor('photos', 6, { limits: { fileSize: 5 * 1024 * 1024 } }))
+  @ApiOperation({ summary: 'Adicionar fotos à galeria do negócio atual' })
+  async addGalleryPhotos(@Request() req: any, @UploadedFiles() photos: any[]) {
+    if (!photos?.length) throw new BadRequestException('Selecione ao menos uma imagem.');
+    return this.businessesService.addGalleryImages(req.user.businessId, photos);
+  }
+
+  @Delete('current/gallery/:fileName')
+  @ApiOperation({ summary: 'Remover foto da galeria do negócio atual' })
+  async removeGalleryPhoto(@Request() req: any, @Param('fileName') fileName: string) {
+    return this.businessesService.removeGalleryImage(req.user.businessId, fileName);
   }
 }

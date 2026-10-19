@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Clock3, Mail, MapPin, Phone, Store } from 'lucide-react';
+import { BadgeCheck, Clock3, ImageOff, Mail, MapPin, Phone, Star, Store } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,6 +17,7 @@ export default function PublicBusinessPage() {
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const { user } = useAuth();
   const [showBooking, setShowBooking] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [booking, setBooking] = useState({ petId: '', serviceId: '', scheduledDate: '', scheduledTime: '', notes: '' });
   const { data: business, isLoading, isError, error } = useQuery({
     queryKey: ['public-business', slug],
@@ -53,6 +54,9 @@ export default function PublicBusinessPage() {
   }
 
   const location = [business.address, business.city, business.state].filter(Boolean).join(' · ');
+  const galleryImages = business.galleryImages || [];
+  const getPublicImageUrl = (imageUrl: string) => imageUrl.startsWith('http') ? imageUrl : `${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/$/, '')}${imageUrl}`;
+  const selectedImage = galleryImages[selectedImageIndex] || galleryImages[0];
 
   return (
     <main className="min-h-screen bg-[#fffaf3] text-[#121a48]">
@@ -71,6 +75,7 @@ export default function PublicBusinessPage() {
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#f8bc47]">Perfil público</p>
             <h1 className="mt-2 text-3xl font-bold md:text-4xl">{business.name}</h1>
+            {business.registrationStatus === 'APPROVED' && <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 text-sm font-semibold text-emerald-100"><BadgeCheck className="h-4 w-4" />Perfil verificado</p>}
             <div className="mt-4 flex flex-wrap gap-2">{business.businessTypes.map((type: string) => <span key={type} className="rounded-full bg-white/10 px-3 py-1 text-sm text-[#dce4ff]">{type}</span>)}</div>
             {user?.accountType === 'TUTOR' && <Button onClick={() => setShowBooking(true)} className="mt-5 bg-[#f5ae2b] text-[#121a48] hover:bg-[#e89a1b]">Agendar serviço</Button>}
           </div>
@@ -79,7 +84,13 @@ export default function PublicBusinessPage() {
 
       <div className="container mx-auto grid gap-8 px-4 py-10 lg:grid-cols-[1fr_320px]">
         <section>
-          <h2 className="text-2xl font-bold">Serviços disponíveis</h2>
+          <h2 className="text-2xl font-bold">Conheça o espaço</h2>
+          <p className="mt-2 text-[#2d3f7d]">Veja fotos do estabelecimento antes de escolher um serviço.</p>
+          {selectedImage ? <div className="mt-6"><div className="aspect-[16/9] overflow-hidden rounded-2xl border border-[#eee4d3] bg-white"><img src={getPublicImageUrl(selectedImage)} alt={`Ambiente de ${business.name}`} className="h-full w-full object-cover" /></div>{galleryImages.length > 1 && <div className="mt-3 flex gap-3 overflow-x-auto pb-1">{galleryImages.map((imageUrl: string, index: number) => <button key={imageUrl} type="button" onClick={() => setSelectedImageIndex(index)} className={`h-20 w-28 shrink-0 overflow-hidden rounded-xl border-2 ${imageUrl === selectedImage ? 'border-[#f5ae2b]' : 'border-transparent'}`} aria-label={`Ver foto ${index + 1} de ${business.name}`}><img src={getPublicImageUrl(imageUrl)} alt="" className="h-full w-full object-cover" /></button>)}</div>}</div> : <Card className="mt-6 border-dashed border-[#eee4d3] bg-white"><CardContent className="flex min-h-56 flex-col items-center justify-center p-6 text-center text-[#2d3f7d]"><ImageOff className="h-9 w-9 text-[#e89a1b]" /><p className="mt-3 font-medium">Este negócio ainda não adicionou fotos do espaço.</p></CardContent></Card>}
+
+          <section className="mt-10"><div className="flex items-end justify-between gap-4"><div><h2 className="text-2xl font-bold">Avaliações</h2><p className="mt-2 text-[#2d3f7d]">Opiniões de tutores após atendimentos concluídos.</p></div>{business.reviewSummary.totalReviews > 0 && <div className="flex items-center gap-1 text-lg font-bold text-[#121a48]"><Star className="h-5 w-5 fill-[#f5ae2b] text-[#f5ae2b]" />{Number(business.reviewSummary.averageRating).toFixed(1)} <span className="ml-1 text-sm font-normal text-[#2d3f7d]">({business.reviewSummary.totalReviews})</span></div>}</div>{business.reviews.length === 0 ? <Card className="mt-6 border-dashed border-[#eee4d3] bg-white"><CardContent className="p-6 text-sm text-[#2d3f7d]">Ainda não há avaliações para este negócio.</CardContent></Card> : <div className="mt-6 space-y-4">{business.reviews.map((review: any) => <Card key={review.id} className="border-[#eee4d3] bg-white"><CardContent className="p-5"><div className="flex items-center gap-1 text-[#e89a1b]">{Array.from({ length: 5 }, (_, index) => <Star key={index} className={`h-4 w-4 ${index < review.rating ? 'fill-current' : 'text-slate-200'}`} />)}</div>{review.comment && <p className="mt-3 text-sm leading-6 text-[#2d3f7d]">{review.comment}</p>}<p className="mt-3 text-xs text-slate-500">Tutor verificado · {new Date(review.createdAt).toLocaleDateString('pt-BR')}</p></CardContent></Card>)}</div>}</section>
+
+          <h2 className="mt-10 text-2xl font-bold">Serviços disponíveis</h2>
           <p className="mt-2 text-[#2d3f7d]">Conheça os serviços oferecidos por este negócio.</p>
           {business.services.length === 0 ? <Card className="mt-6 border-[#eee4d3] bg-white"><CardContent className="p-6 text-[#2d3f7d]">Nenhum serviço público disponível no momento.</CardContent></Card> : <div className="mt-6 grid gap-4 sm:grid-cols-2">{business.services.map((service: any) => <Card key={service.name} className="border-[#eee4d3] bg-white"><CardContent className="p-6"><p className="text-sm font-semibold text-[#e89a1b]">{service.category}</p><h3 className="mt-1 text-lg font-bold">{service.name}</h3>{service.description && <p className="mt-2 text-sm leading-6 text-[#2d3f7d]">{service.description}</p>}<div className="mt-5 flex items-center justify-between border-t border-[#eee4d3] pt-4 text-sm"><span className="flex items-center gap-1 text-[#2d3f7d]"><Clock3 className="h-4 w-4" />{service.duration} min</span><span className="font-bold text-[#121a48]">{formatCurrency(Number(service.price))}</span></div></CardContent></Card>)}</div>}
         </section>

@@ -12,6 +12,8 @@ interface User {
   accountType: 'TUTOR' | 'BUSINESS' | 'PROFESSIONAL';
   businessId: string | null;
   businessName?: string;
+  registrationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  isPlatformAdmin?: boolean;
 }
 
 interface AuthContextType {

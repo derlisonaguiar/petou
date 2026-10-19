@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, Search, PawPrint, UserRound } from 'lucide-react';
+import { CalendarDays, Hotel, Search, PawPrint, UserRound } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -19,6 +19,12 @@ const shortcuts = [
     description: 'Encontre profissionais e negocios perto de voce.',
     href: '/tutor/servicos',
     icon: Search,
+  },
+  {
+    title: 'Hospedagem',
+    description: 'Encontre hotéis pet e creches para o seu companheiro.',
+    href: '/tutor/servicos?category=HOSPITALITY',
+    icon: Hotel,
   },
   {
     title: 'Meus pets',

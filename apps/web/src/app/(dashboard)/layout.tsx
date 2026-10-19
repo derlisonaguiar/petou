@@ -29,6 +29,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { useState } from 'react';
+import { api } from '@/lib/api';
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
@@ -52,6 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState<string | undefined>();
 
   useEffect(() => {
     if (!isLoading) {
@@ -62,6 +64,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     }
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    if (user?.accountType === 'BUSINESS') {
+      api.get('/businesses/current').then((response) => setRegistrationStatus(response.data.registrationStatus)).catch(() => undefined);
+    }
+  }, [user?.accountType]);
 
   if (isLoading) {
     return (
@@ -120,6 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {item.label}
             </Link>
           ))}
+          {user.isPlatformAdmin === true && <Link href="/admin/cadastros" className="flex items-center gap-3 px-3 py-2 rounded-md text-white/80 hover:bg-white/10 hover:text-white"><UserCheck className="h-5 w-5" />Aprovações</Link>}
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-[#121a48]">
@@ -156,7 +165,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page Content */}
-        <main className="p-6">{children}</main>
+        <main className="p-6">{registrationStatus === 'PENDING' && <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><strong>Seu perfil está em análise.</strong> Você mantém acesso à área interna enquanto aguardamos a aprovação.</div>}{registrationStatus === 'REJECTED' && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"><strong>Seu perfil não foi aprovado.</strong> Ele permanece oculto da busca pública.</div>}{children}</main>
       </div>
     </div>
   );
